@@ -11,17 +11,15 @@ class Inventory extends Model
 
     protected $table = 'inventories';
     protected $primaryKey = 'uid';
-    public $timestamps = false;
+    public $timestamps = true;
     protected $guarded = ['uid'];
 
     protected $casts = [
         'quantity_in_stock' => 'decimal:3',
-        'quantity_available' => 'decimal:3',
-        'quantity_reserved' => 'decimal:3',
-        'quantity_in' => 'decimal:3',
-        'quantity_out' => 'decimal:3',
-        'average_cost' => 'decimal:2',
-        'updated_date' => 'datetime',
+        'sale_price' => 'decimal:2',
+        'expiry_date' => 'date',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     public function product()
@@ -29,20 +27,9 @@ class Inventory extends Model
         return $this->belongsTo(Product::class, 'product_uid', 'uid');
     }
 
-    public function branch()
+    public function purchaseDetails()
     {
-        return $this->belongsTo(Branch::class, 'branch_uid', 'uid');
-    }
-
-    public function warehouse()
-    {
-        return $this->belongsTo(Warehouse::class, 'warehouse_uid', 'uid');
-    }
-
-    public function getBranchNameAttribute(): string
-    {
-        return $this->branch?->branch_name
-            ?: ($this->warehouse?->warehouse_name ?: '—');
+        return $this->hasMany(PurchaseInvoiceDetail::class, 'inventory_uid', 'uid');
     }
 
     public function getCurrentQuantityAttribute()
@@ -50,11 +37,62 @@ class Inventory extends Model
         return $this->quantity_in_stock;
     }
 
-    public static function findForProductBranch(int $productUid, int $branchUid): ?self
+    public function getBranchNameAttribute(): string
     {
+        return '—';
+    }
+
+    /**
+     * Prefer earliest-expiring batch with stock for the product.
+     */
+    public static function findForProductBranch(int $productUid, int $branchUid = 0): ?self
+    {
+        $withStock = static::query()
+            ->where('product_uid', $productUid)
+            ->where('quantity_in_stock', '>', 0)
+            ->orderByRaw('CASE WHEN expiry_date IS NULL THEN 1 ELSE 0 END')
+            ->orderBy('expiry_date')
+            ->first();
+
+        if ($withStock) {
+            return $withStock;
+        }
+
         return static::query()
             ->where('product_uid', $productUid)
-            ->where('branch_uid', $branchUid)
+            ->orderBy('uid')
             ->first();
+    }
+
+    public static function findOrCreateBatch(
+        int $productUid,
+        string $batchNo,
+        ?string $expiryDate = null,
+        ?float $salePrice = null
+    ): self {
+        $inventory = static::query()
+            ->where('product_uid', $productUid)
+            ->where('batch_no', $batchNo)
+            ->first();
+
+        if ($inventory) {
+            if ($expiryDate && !$inventory->expiry_date) {
+                $inventory->expiry_date = $expiryDate;
+            }
+            if ($salePrice !== null && $inventory->sale_price === null) {
+                $inventory->sale_price = $salePrice;
+            }
+            $inventory->save();
+
+            return $inventory;
+        }
+
+        return static::create([
+            'product_uid' => $productUid,
+            'batch_no' => $batchNo,
+            'expiry_date' => $expiryDate,
+            'quantity_in_stock' => 0,
+            'sale_price' => $salePrice,
+        ]);
     }
 }

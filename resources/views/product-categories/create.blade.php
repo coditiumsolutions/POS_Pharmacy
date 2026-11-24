@@ -12,29 +12,12 @@
 
             <div class="invoice-meta-grid invoice-meta-form">
                 <div class="invoice-meta-row">
-                    <label class="invoice-meta-title" for="category_code">Code *</label>
-                    <div class="invoice-meta-field">
-                        <input id="category_code" type="text" name="category_code"
-                               class="form-control form-control-sm invoice-meta-input"
-                               value="{{ old('category_code') }}" required>
-                        @error('category_code')<div class="text-danger small">{{ $message }}</div>@enderror
-                    </div>
                     <label class="invoice-meta-title" for="category_name">Name *</label>
                     <div class="invoice-meta-field">
                         <input id="category_name" type="text" name="category_name"
                                class="form-control form-control-sm invoice-meta-input"
-                               value="{{ old('category_name') }}" required>
+                               value="{{ old('category_name') }}" required maxlength="100">
                         @error('category_name')<div class="text-danger small">{{ $message }}</div>@enderror
-                    </div>
-                </div>
-
-                <div class="invoice-meta-row">
-                    <label class="invoice-meta-title" for="description">Description</label>
-                    <div class="invoice-meta-field">
-                        <input id="description" type="text" name="description"
-                               class="form-control form-control-sm invoice-meta-input"
-                               value="{{ old('description') }}">
-                        @error('description')<div class="text-danger small">{{ $message }}</div>@enderror
                     </div>
                     <label class="invoice-meta-title" for="is_active">Active</label>
                     <div class="invoice-meta-field">
@@ -45,15 +28,22 @@
                 </div>
 
                 <div class="invoice-meta-row">
-                    <label class="invoice-meta-title" for="category_image">Category Image</label>
+                    <label class="invoice-meta-title" for="description">Description</label>
                     <div class="invoice-meta-field" style="grid-column: 2 / -1;">
-                        <input id="category_image" type="file" name="category_image"
+                        <input id="description" type="text" name="description"
                                class="form-control form-control-sm invoice-meta-input"
-                               accept="image/png,image/jpeg,image/gif,image/webp">
-                        <div class="invoice-meta-sub text-muted">
-                            Optional image for this category (JPG, PNG, GIF, WEBP — max 2MB). Shown on Cash POS.
-                        </div>
-                        @error('category_image')<div class="text-danger small">{{ $message }}</div>@enderror
+                               value="{{ old('description') }}" maxlength="255">
+                        @error('description')<div class="text-danger small">{{ $message }}</div>@enderror
+                    </div>
+                </div>
+
+                <div class="invoice-meta-row">
+                    <label class="invoice-meta-title" for="image">Category Image</label>
+                    <div class="invoice-meta-field" style="grid-column: 2 / -1;">
+                        <input id="image" type="file" name="image" class="form-control form-control-sm"
+                               accept="image/jpeg,image/png,image/gif,image/webp">
+                        <div class="form-text">JPG, PNG, GIF or WebP. Max 2 MB. Path is saved in the database.</div>
+                        @error('image')<div class="text-danger small">{{ $message }}</div>@enderror
                     </div>
                 </div>
             </div>

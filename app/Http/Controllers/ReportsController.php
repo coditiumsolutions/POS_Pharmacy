@@ -288,8 +288,8 @@ class ReportsController extends Controller
             ->where('invoice_status', '!=', 'Cancelled')
             ->sum('net_amount');
 
-        $purchases = (float) PurchaseInvoice::whereDate('purchase_date', '>=', $dateFrom)
-            ->whereDate('purchase_date', '<=', $dateTo)
+        $purchases = (float) PurchaseInvoice::whereDate('invoice_date', '>=', $dateFrom)
+            ->whereDate('invoice_date', '<=', $dateTo)
             ->where('invoice_status', '!=', 'Cancelled')
             ->sum('net_amount');
 
@@ -370,11 +370,11 @@ class ReportsController extends Controller
     {
         [$dateFrom, $dateTo, $dateFromDisplay, $dateToDisplay] = $this->reportDateRange($request);
 
-        $invoices = PurchaseInvoice::with('vendor')
-            ->whereDate('purchase_date', '>=', $dateFrom)
-            ->whereDate('purchase_date', '<=', $dateTo)
+        $invoices = PurchaseInvoice::query()
+            ->whereDate('invoice_date', '>=', $dateFrom)
+            ->whereDate('invoice_date', '<=', $dateTo)
             ->where('invoice_status', '!=', 'Cancelled')
-            ->orderBy('purchase_date', 'desc')
+            ->orderBy('invoice_date', 'desc')
             ->get();
 
         $summary = [
@@ -418,30 +418,31 @@ class ReportsController extends Controller
 
         $query = DB::table('inventories as i')
             ->join('products as p', 'i.product_uid', '=', 'p.uid')
-            ->leftJoin('warehouses as w', 'i.warehouse_uid', '=', 'w.uid')
-            ->leftJoin('product_categories as c', 'p.category_uid', '=', 'c.uid')
+            ->leftJoin('categories as c', 'p.category_uid', '=', 'c.uid')
             ->select(
-                'p.product_code',
+                'p.barcode as product_code',
                 'p.product_name',
                 'c.category_name',
-                'w.warehouse_name',
+                DB::raw("'-' as warehouse_name"),
                 'i.quantity_in_stock',
-                'i.quantity_available',
-                'p.minimum_stock',
-                'p.sale_price',
-                DB::raw('i.quantity_in_stock * p.sale_price as stock_value')
+                'i.quantity_in_stock as quantity_available',
+                'i.batch_no',
+                'p.reorder_level as minimum_stock',
+                DB::raw('COALESCE(i.sale_price, p.sale_price) as sale_price'),
+                DB::raw('i.quantity_in_stock * COALESCE(i.sale_price, p.sale_price) as stock_value')
             )
             ->where('p.is_active', true);
 
         if ($search) {
             $query->where(function($q) use ($search) {
                 $q->where('p.product_name', 'like', "%{$search}%")
-                  ->orWhere('p.product_code', 'like', "%{$search}%");
+                  ->orWhere('p.barcode', 'like', "%{$search}%")
+                  ->orWhere('i.batch_no', 'like', "%{$search}%");
             });
         }
 
         if ($lowStockOnly) {
-            $query->whereRaw('i.quantity_in_stock <= p.minimum_stock');
+            $query->whereRaw('i.quantity_in_stock <= p.reorder_level');
         }
 
         $items = $query->orderBy('p.product_name')->get();

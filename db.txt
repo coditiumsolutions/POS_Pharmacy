@@ -1,0 +1,648 @@
+# Version: 1.1 | UpdatedAt: 21/11/2026
+# Database documentation for POS Pharmacy
+# Source: live schema introspection (credentials not stored)
+# Note: PK columns use uid (maps to category_uid / product_uid / inventory_uid)
+# Note: categories table replaces product_categories
+
+FIELD MAPPING (Pharmacy schema)
+-------------------------------
+categories.uid = category_uid
+categories.category_name = category_name
+products.uid = product_uid
+products.barcode = barcode
+products.product_name = product_name / ItemName
+products.generic_name = generic_name
+products.company_name = company_name
+products.strength = strength
+products.pack_unit = pack_unit
+products.units_per_pack = units_per_pack
+products.sale_price = sale_price / SaleValue
+products.discount_percent = discount_percent
+inventories.uid = inventory_uid
+inventories.batch_no = batch_no / Batch
+inventories.expiry_date = expiry_date / Expiry
+inventories.quantity_in_stock = Quantity
+inventories.sale_price = SalePrice (batch-level)
+inventories.remarks = Remarks
+purchase_invoices.uid = purchase_invoice_uid
+purchase_invoices.invoice_no = invoice_no
+purchase_invoices.supplier_name = supplier_name
+purchase_invoice_details.uid = purchase_detail_uid
+purchase_invoice_details.inventory_uid = links line to batch inventory
+purchase_invoice_details.received_base_quantity = (qty * units_per_pack) + bonus + loose
+
+TABLES
+======
+
+TABLE: audit_logs
+----------------
+  - uid                      int(10) unsigned             NOT NULL [PRI] auto_increment
+  - user_uid                 int(10) unsigned             NULL default=NULL
+  - action_type              varchar(50)                  NULL default=NULL
+  - action                   varchar(100)                 NOT NULL
+  - entity_type              varchar(100)                 NULL default=NULL
+  - entity_uid               int(10) unsigned             NULL default=NULL
+  - description              text                         NULL default=NULL
+  - ip_address               varchar(50)                  NULL default=NULL
+  - log_date                 timestamp                    NOT NULL default=current_timestamp()
+  Indexes:
+    * PRIMARY (UNIQUE): uid
+
+TABLE: branches
+--------------
+  - uid                      int(10) unsigned             NOT NULL [PRI] auto_increment
+  - branch_code              varchar(50)                  NOT NULL [UNI]
+  - branch_name              varchar(150)                 NOT NULL
+  - address                  varchar(500)                 NULL default=NULL
+  - city                     varchar(100)                 NULL default=NULL
+  - contact_person           varchar(150)                 NULL default=NULL
+  - mobile_no                varchar(30)                  NULL default=NULL
+  - phone_no                 varchar(30)                  NULL default=NULL
+  - email                    varchar(150)                 NULL default=NULL
+  - is_active                tinyint(1)                   NOT NULL default=1
+  - created_date             timestamp                    NOT NULL default=current_timestamp()
+  - updated_date             timestamp                    NULL default=NULL
+  Indexes:
+    * branches_branch_code_index (INDEX): branch_code
+    * branches_branch_code_unique (UNIQUE): branch_code
+    * PRIMARY (UNIQUE): uid
+
+TABLE: categories
+----------------
+  - uid                      int(10) unsigned             NOT NULL [PRI] auto_increment
+  - category_name            varchar(150)                 NOT NULL
+  - description              varchar(500)                 NULL default=NULL
+  - is_active                tinyint(1)                   NOT NULL default=1
+  Indexes:
+    * PRIMARY (UNIQUE): uid
+
+TABLE: configurations
+--------------------
+  - uid                      int(10) unsigned             NOT NULL [PRI] auto_increment
+  - config_key               varchar(100)                 NOT NULL [UNI]
+  - config_value             text                         NULL default=NULL
+  Indexes:
+    * configurations_config_key_unique (UNIQUE): config_key
+    * PRIMARY (UNIQUE): uid
+
+TABLE: customers
+---------------
+  - uid                      int(10) unsigned             NOT NULL [PRI] auto_increment
+  - customer_code            varchar(50)                  NOT NULL [UNI]
+  - customer_name            varchar(200)                 NOT NULL [MUL]
+  - mobile_no                varchar(30)                  NULL [MUL] default=NULL
+  - phone_no                 varchar(30)                  NULL default=NULL
+  - email                    varchar(150)                 NULL default=NULL
+  - address                  varchar(500)                 NULL default=NULL
+  - city                     varchar(100)                 NULL default=NULL
+  - area                     varchar(100)                 NULL default=NULL
+  - ntn                      varchar(50)                  NULL default=NULL
+  - opening_balance          decimal(18,2)                NOT NULL default=0.00
+  - advance_balance          decimal(18,2)                NOT NULL default=0.00
+  - credit_limit             decimal(18,2)                NOT NULL default=0.00
+  - discount_percent         decimal(5,2)                 NOT NULL default=0.00
+  - is_active                tinyint(1)                   NOT NULL default=1
+  - customer_type            varchar(20)                  NOT NULL [MUL] default='regular'
+  - created_date             timestamp                    NOT NULL default=current_timestamp()
+  - updated_date             timestamp                    NULL default=NULL
+  Indexes:
+    * customers_customer_code_index (INDEX): customer_code
+    * customers_customer_code_unique (UNIQUE): customer_code
+    * customers_customer_name_index (INDEX): customer_name
+    * customers_customer_type_index (INDEX): customer_type
+    * customers_mobile_no_index (INDEX): mobile_no
+    * PRIMARY (UNIQUE): uid
+
+TABLE: customer_monthly_supplies
+-------------------------------
+  - uid                      int(10) unsigned             NOT NULL [PRI] auto_increment
+  - customer_uid             int(10) unsigned             NOT NULL [MUL]
+  - product_uid              int(10) unsigned             NOT NULL [MUL]
+  - day_of_month             int(11)                      NOT NULL default=0
+  - quantity                 decimal(18,3)                NOT NULL
+  - rate                     decimal(18,2)                NOT NULL
+  - delivery_charges         decimal(18,2)                NOT NULL default=0.00
+  - is_active                tinyint(1)                   NOT NULL default=1
+  - created_date             timestamp                    NOT NULL default=current_timestamp()
+  - updated_date             timestamp                    NULL default=NULL
+  Indexes:
+    * customer_monthly_supplies_customer_uid_index (INDEX): customer_uid
+    * customer_monthly_supplies_product_uid_index (INDEX): product_uid
+    * PRIMARY (UNIQUE): uid
+
+TABLE: customer_monthly_supply_overrides
+---------------------------------------
+  - uid                      int(10) unsigned             NOT NULL [PRI] auto_increment
+  - customer_uid             int(10) unsigned             NOT NULL [MUL]
+  - product_uid              int(10) unsigned             NOT NULL
+  - override_date            date                         NOT NULL [MUL]
+  - quantity                 decimal(18,3)                NOT NULL
+  - rate                     decimal(18,2)                NOT NULL
+  - is_skipped               tinyint(1)                   NOT NULL default=0
+  - remarks                  varchar(255)                 NULL default=NULL
+  - created_date             timestamp                    NOT NULL default=current_timestamp()
+  - updated_date             timestamp                    NULL default=NULL
+  Indexes:
+    * customer_monthly_supply_overrides_customer_uid_index (INDEX): customer_uid
+    * idx_override_date_customer (INDEX): override_date,customer_uid
+    * PRIMARY (UNIQUE): uid
+
+TABLE: customer_payments
+-----------------------
+  - uid                      int(10) unsigned             NOT NULL [PRI] auto_increment
+  - payment_no               varchar(50)                  NOT NULL [UNI]
+  - payment_date             timestamp                    NOT NULL [MUL] default=current_timestamp()
+  - customer_uid             int(10) unsigned             NOT NULL [MUL]
+  - branch_uid               int(10) unsigned             NULL default=NULL
+  - user_uid                 int(10) unsigned             NULL default=NULL
+  - amount                   decimal(18,2)                NOT NULL
+  - applied_to_invoice_amount decimal(18,2)                NOT NULL default=0.00
+  - payment_mode             varchar(50)                  NULL default=NULL
+  - reference_no             varchar(100)                 NULL default=NULL
+  - remarks                  varchar(500)                 NULL default=NULL
+  - created_date             timestamp                    NOT NULL default=current_timestamp()
+  - updated_date             timestamp                    NULL default=NULL
+  Indexes:
+    * customer_payments_customer_uid_index (INDEX): customer_uid
+    * customer_payments_payment_date_index (INDEX): payment_date
+    * customer_payments_payment_no_unique (UNIQUE): payment_no
+    * PRIMARY (UNIQUE): uid
+
+TABLE: employees
+---------------
+  - uid                      int(10) unsigned             NOT NULL [PRI] auto_increment
+  - employee_code            varchar(50)                  NOT NULL [UNI]
+  - full_name                varchar(200)                 NOT NULL
+  - father_name              varchar(200)                 NULL default=NULL
+  - cnic                     varchar(50)                  NULL default=NULL
+  - mobile_no                varchar(30)                  NULL default=NULL
+  - email                    varchar(150)                 NULL default=NULL
+  - address                  varchar(500)                 NULL default=NULL
+  - designation              varchar(100)                 NULL default=NULL
+  - department               varchar(100)                 NULL default=NULL
+  - date_of_joining          timestamp                    NULL default=NULL
+  - basic_salary             decimal(18,2)                NOT NULL default=0.00
+  - is_active                tinyint(1)                   NOT NULL default=1
+  - created_date             timestamp                    NOT NULL default=current_timestamp()
+  - updated_date             timestamp                    NULL default=NULL
+  Indexes:
+    * employees_employee_code_index (INDEX): employee_code
+    * employees_employee_code_unique (UNIQUE): employee_code
+    * PRIMARY (UNIQUE): uid
+
+TABLE: employee_allowances
+-------------------------
+  - uid                      int(10) unsigned             NOT NULL [PRI] auto_increment
+  - employee_uid             int(10) unsigned             NOT NULL [MUL]
+  - allowance_type           varchar(100)                 NOT NULL
+  - amount                   decimal(18,2)                NOT NULL
+  - is_active                tinyint(1)                   NOT NULL default=1
+  - created_date             timestamp                    NOT NULL default=current_timestamp()
+  - updated_date             timestamp                    NULL default=NULL
+  Indexes:
+    * employee_allowances_employee_uid_index (INDEX): employee_uid
+    * PRIMARY (UNIQUE): uid
+
+TABLE: employee_deductions
+-------------------------
+  - uid                      int(10) unsigned             NOT NULL [PRI] auto_increment
+  - employee_uid             int(10) unsigned             NOT NULL [MUL]
+  - deduction_type           varchar(100)                 NOT NULL
+  - amount                   decimal(18,2)                NOT NULL
+  - is_active                tinyint(1)                   NOT NULL default=1
+  - created_date             timestamp                    NOT NULL default=current_timestamp()
+  - updated_date             timestamp                    NULL default=NULL
+  Indexes:
+    * employee_deductions_employee_uid_index (INDEX): employee_uid
+    * PRIMARY (UNIQUE): uid
+
+TABLE: employee_payments
+-----------------------
+  - uid                      int(10) unsigned             NOT NULL [PRI] auto_increment
+  - payment_no               varchar(50)                  NOT NULL [UNI]
+  - payment_date             timestamp                    NOT NULL default=current_timestamp()
+  - employee_uid             int(10) unsigned             NOT NULL [MUL]
+  - month_year               varchar(20)                  NOT NULL
+  - basic_salary             decimal(18,2)                NOT NULL default=0.00
+  - total_allowances         decimal(18,2)                NOT NULL default=0.00
+  - total_deductions         decimal(18,2)                NOT NULL default=0.00
+  - net_salary               decimal(18,2)                NOT NULL default=0.00
+  - remarks                  varchar(500)                 NULL default=NULL
+  - created_date             timestamp                    NOT NULL default=current_timestamp()
+  - updated_date             timestamp                    NULL default=NULL
+  Indexes:
+    * employee_payments_employee_uid_index (INDEX): employee_uid
+    * employee_payments_payment_no_unique (UNIQUE): payment_no
+    * PRIMARY (UNIQUE): uid
+
+TABLE: expenses
+--------------
+  - uid                      int(10) unsigned             NOT NULL [PRI] auto_increment
+  - expense_no               varchar(50)                  NOT NULL [UNI]
+  - expense_date             timestamp                    NOT NULL [MUL] default=current_timestamp()
+  - expense_category_uid     int(10) unsigned             NOT NULL [MUL]
+  - branch_uid               int(10) unsigned             NULL default=NULL
+  - user_uid                 int(10) unsigned             NULL default=NULL
+  - amount                   decimal(18,2)                NOT NULL
+  - payment_mode             varchar(50)                  NULL default=NULL
+  - description              varchar(500)                 NULL default=NULL
+  - created_date             timestamp                    NOT NULL default=current_timestamp()
+  - updated_date             timestamp                    NULL default=NULL
+  Indexes:
+    * expenses_expense_category_uid_index (INDEX): expense_category_uid
+    * expenses_expense_date_index (INDEX): expense_date
+    * expenses_expense_no_unique (UNIQUE): expense_no
+    * PRIMARY (UNIQUE): uid
+
+TABLE: expense_categories
+------------------------
+  - uid                      int(10) unsigned             NOT NULL [PRI] auto_increment
+  - category_code            varchar(50)                  NOT NULL [UNI]
+  - category_name            varchar(150)                 NOT NULL
+  - description              varchar(500)                 NULL default=NULL
+  - is_active                tinyint(1)                   NOT NULL default=1
+  Indexes:
+    * expense_categories_category_code_unique (UNIQUE): category_code
+    * PRIMARY (UNIQUE): uid
+
+TABLE: inventories
+-----------------
+  - uid                      int(10) unsigned             NOT NULL [PRI] auto_increment
+  - product_uid              int(10) unsigned             NOT NULL [MUL]
+  - batch_no                 varchar(100)                 NOT NULL [MUL]
+  - expiry_date              date                         NULL [MUL] default=NULL
+  - quantity_in_stock        decimal(12,3)                NOT NULL default=0.000
+  - sale_price               decimal(12,2)                NULL default=NULL
+  - remarks                  varchar(255)                 NULL default=NULL
+  - created_at               timestamp                    NULL default=NULL
+  - updated_at               timestamp                    NULL default=NULL
+  Indexes:
+    * idx_inventory_batch (INDEX): batch_no
+    * idx_inventory_expiry (INDEX): expiry_date
+    * inventories_product_batch_unique (UNIQUE): product_uid,batch_no
+    * inventories_product_uid_index (INDEX): product_uid
+    * PRIMARY (UNIQUE): uid
+
+TABLE: inventory_transactions
+----------------------------
+  - uid                      int(10) unsigned             NOT NULL [PRI] auto_increment
+  - product_uid              int(10) unsigned             NOT NULL [MUL]
+  - warehouse_uid            int(10) unsigned             NULL default=NULL
+  - transaction_type         varchar(50)                  NOT NULL [MUL]
+  - reference_uid            int(10) unsigned             NULL default=NULL
+  - reference_no             varchar(50)                  NULL default=NULL
+  - transaction_date         timestamp                    NOT NULL [MUL] default=current_timestamp()
+  - quantity                 decimal(18,3)                NOT NULL
+  - unit_cost                decimal(18,2)                NOT NULL default=0.00
+  - total_cost               decimal(18,2)                NOT NULL default=0.00
+  - remarks                  varchar(500)                 NULL default=NULL
+  - created_date             timestamp                    NOT NULL default=current_timestamp()
+  Indexes:
+    * inventory_transactions_product_uid_index (INDEX): product_uid
+    * inventory_transactions_transaction_date_index (INDEX): transaction_date
+    * inventory_transactions_transaction_type_index (INDEX): transaction_type
+    * PRIMARY (UNIQUE): uid
+
+TABLE: migrations
+----------------
+  - id                       int(10) unsigned             NOT NULL [PRI] auto_increment
+  - migration                varchar(255)                 NOT NULL
+  - batch                    int(11)                      NOT NULL
+  Indexes:
+    * PRIMARY (UNIQUE): id
+
+TABLE: offline_sync_tables
+-------------------------
+  - uid                      int(10) unsigned             NOT NULL [PRI] auto_increment
+  - table_name               varchar(100)                 NOT NULL [UNI]
+  - pull_from_online         tinyint(1)                   NOT NULL default=0
+  - push_to_online           tinyint(1)                   NOT NULL default=0
+  - is_active                tinyint(1)                   NOT NULL default=1
+  - sync_mode                varchar(50)                  NOT NULL default='Lookup'
+  Indexes:
+    * offline_sync_tables_table_name_unique (UNIQUE): table_name
+    * PRIMARY (UNIQUE): uid
+
+TABLE: payment_methods
+---------------------
+  - uid                      int(10) unsigned             NOT NULL [PRI] auto_increment
+  - payment_method_name      varchar(100)                 NOT NULL
+  - description              varchar(500)                 NULL default=NULL
+  - is_active                tinyint(1)                   NOT NULL default=1
+  Indexes:
+    * PRIMARY (UNIQUE): uid
+
+TABLE: personal_access_tokens
+----------------------------
+  - id                       bigint(20) unsigned          NOT NULL [PRI] auto_increment
+  - tokenable_type           varchar(255)                 NOT NULL [MUL]
+  - tokenable_id             bigint(20) unsigned          NOT NULL
+  - name                     varchar(255)                 NOT NULL
+  - token                    varchar(64)                  NOT NULL [UNI]
+  - abilities                text                         NULL default=NULL
+  - last_used_at             timestamp                    NULL default=NULL
+  - expires_at               timestamp                    NULL default=NULL
+  - created_at               timestamp                    NULL default=NULL
+  - updated_at               timestamp                    NULL default=NULL
+  Indexes:
+    * personal_access_tokens_tokenable_type_tokenable_id_index (INDEX): tokenable_type,tokenable_id
+    * personal_access_tokens_token_unique (UNIQUE): token
+    * PRIMARY (UNIQUE): id
+
+TABLE: products
+--------------
+  - uid                      int(10) unsigned             NOT NULL [PRI] auto_increment
+  - barcode                  varchar(100)                 NULL [MUL] default=NULL
+  - product_name             varchar(200)                 NOT NULL [MUL]
+  - generic_name             varchar(150)                 NULL default=NULL
+  - category_uid             int(10) unsigned             NOT NULL [MUL]
+  - company_name             varchar(150)                 NULL default=NULL
+  - strength                 varchar(50)                  NULL default=NULL
+  - pack_unit                varchar(50)                  NULL default=NULL
+  - sale_price               decimal(12,2)                NOT NULL default=0.00
+  - discount_percent         decimal(5,2)                 NOT NULL default=0.00
+  - is_active                tinyint(1)                   NOT NULL default=1
+  - remarks                  text                         NULL default=NULL
+  - units_per_pack           int(11)                      NOT NULL default=1
+  - reorder_level            decimal(12,2)                NOT NULL default=0.00
+  - allow_loose_sale         tinyint(1)                   NOT NULL default=0
+  - is_prescription_required tinyint(1)                   NOT NULL default=0
+  Indexes:
+    * PRIMARY (UNIQUE): uid
+    * products_barcode_index (INDEX): barcode
+    * products_category_uid_index (INDEX): category_uid
+    * products_product_name_index (INDEX): product_name
+
+TABLE: product_units
+-------------------
+  - uid                      int(10) unsigned             NOT NULL [PRI] auto_increment
+  - unit_code                varchar(50)                  NOT NULL [UNI]
+  - unit_name                varchar(100)                 NOT NULL
+  - description              varchar(500)                 NULL default=NULL
+  - is_active                tinyint(1)                   NOT NULL default=1
+  Indexes:
+    * PRIMARY (UNIQUE): uid
+    * product_units_unit_code_unique (UNIQUE): unit_code
+
+TABLE: purchase_invoices
+-----------------------
+  - uid                      int(10) unsigned             NOT NULL [PRI] auto_increment
+  - invoice_no               varchar(50)                  NOT NULL [UNI]
+  - supplier_invoice_no      varchar(100)                 NULL default=NULL
+  - supplier_name            varchar(150)                 NOT NULL
+  - invoice_date             date                         NOT NULL
+  - received_date            date                         NULL default=NULL
+  - subtotal                 decimal(12,2)                NOT NULL default=0.00
+  - discount_amount          decimal(12,2)                NOT NULL default=0.00
+  - tax_amount               decimal(12,2)                NOT NULL default=0.00
+  - other_charges            decimal(12,2)                NOT NULL default=0.00
+  - net_amount               decimal(12,2)                NOT NULL default=0.00
+  - paid_amount              decimal(12,2)                NOT NULL default=0.00
+  - balance_amount           decimal(12,2)                NOT NULL default=0.00
+  - payment_status           enum('Unpaid','Partial','Paid') NOT NULL default='Unpaid'
+  - invoice_status           enum('Draft','Received','Cancelled') NOT NULL default='Draft'
+  - payment_method           varchar(50)                  NULL default=NULL
+  - remarks                  text                         NULL default=NULL
+  - created_at               timestamp                    NULL default=NULL
+  - updated_at               timestamp                    NULL default=NULL
+  Indexes:
+    * PRIMARY (UNIQUE): uid
+    * purchase_invoices_invoice_no_unique (UNIQUE): invoice_no
+
+TABLE: purchase_invoice_details
+------------------------------
+  - uid                      int(10) unsigned             NOT NULL [PRI] auto_increment
+  - purchase_invoice_uid     int(10) unsigned             NOT NULL [MUL]
+  - inventory_uid            int(10) unsigned             NOT NULL [MUL]
+  - purchase_quantity        decimal(12,3)                NOT NULL default=0.000
+  - bonus_quantity           decimal(12,3)                NOT NULL default=0.000
+  - loose_quantity           decimal(12,3)                NOT NULL default=0.000
+  - units_per_pack           decimal(12,3)                NOT NULL default=1.000
+  - received_base_quantity   decimal(12,3)                NOT NULL default=0.000
+  - purchase_price           decimal(12,2)                NOT NULL default=0.00
+  - discount_amount          decimal(12,2)                NOT NULL default=0.00
+  - tax_amount               decimal(12,2)                NOT NULL default=0.00
+  - line_total               decimal(12,2)                NOT NULL default=0.00
+  - remarks                  varchar(255)                 NULL default=NULL
+  Indexes:
+    * idx_purchase_detail_inventory (INDEX): inventory_uid
+    * PRIMARY (UNIQUE): uid
+    * purchase_invoice_details_purchase_invoice_uid_index (INDEX): purchase_invoice_uid
+
+TABLE: sales_invoices
+--------------------
+  - uid                      int(10) unsigned             NOT NULL [PRI] auto_increment
+  - client_transaction_id    char(36)                     NULL [UNI] default=NULL
+  - invoice_no               varchar(50)                  NOT NULL [UNI]
+  - invoice_date             timestamp                    NOT NULL [MUL] default=current_timestamp()
+  - branch_uid               int(10) unsigned             NULL [MUL] default=NULL
+  - branch                   varchar(150)                 NULL default=NULL
+  - customer_uid             int(10) unsigned             NULL [MUL] default=NULL
+  - user_uid                 int(10) unsigned             NULL [MUL] default=NULL
+  - user_name                varchar(100)                 NULL default=NULL
+  - terminal_uid             int(10) unsigned             NULL default=NULL
+  - terminal                 varchar(100)                 NULL default=NULL
+  - payment_method_uid       int(10) unsigned             NULL default=NULL
+  - sub_total                decimal(18,2)                NOT NULL default=0.00
+  - discount_amount          decimal(18,2)                NOT NULL default=0.00
+  - tax_amount               decimal(18,2)                NOT NULL default=0.00
+  - other_charges            decimal(18,2)                NOT NULL default=0.00
+  - net_amount               decimal(18,2)                NOT NULL default=0.00
+  - paid_amount              decimal(18,2)                NOT NULL default=0.00
+  - customer_given_amount    decimal(18,2)                NULL default=NULL
+  - change_given_amount      decimal(18,2)                NULL default=NULL
+  - balance_amount           decimal(18,2)                NOT NULL default=0.00
+  - payment_status           varchar(30)                  NOT NULL default='Unpaid'
+  - invoice_status           varchar(30)                  NOT NULL default='Completed'
+  - pos_type                 varchar(30)                  NOT NULL [MUL] default='Walk-In'
+  - remarks                  varchar(500)                 NULL default=NULL
+  - created_date             timestamp                    NOT NULL default=current_timestamp()
+  - updated_date             timestamp                    NULL default=NULL
+  Indexes:
+    * PRIMARY (UNIQUE): uid
+    * sales_invoices_branch_uid_index (INDEX): branch_uid
+    * sales_invoices_client_transaction_id_unique (UNIQUE): client_transaction_id
+    * sales_invoices_customer_uid_index (INDEX): customer_uid
+    * sales_invoices_invoice_date_index (INDEX): invoice_date
+    * sales_invoices_invoice_no_index (INDEX): invoice_no
+    * sales_invoices_invoice_no_unique (UNIQUE): invoice_no
+    * sales_invoices_pos_type_index (INDEX): pos_type
+    * sales_invoices_user_uid_index (INDEX): user_uid
+
+TABLE: sales_invoice_details
+---------------------------
+  - uid                      int(10) unsigned             NOT NULL [PRI] auto_increment
+  - sales_invoice_uid        int(10) unsigned             NOT NULL [MUL]
+  - product_uid              int(10) unsigned             NOT NULL [MUL]
+  - quantity                 decimal(18,3)                NOT NULL
+  - unit_price               decimal(18,2)                NOT NULL
+  - discount_percent         decimal(5,2)                 NOT NULL default=0.00
+  - discount_amount          decimal(18,2)                NOT NULL default=0.00
+  - tax_percent              decimal(5,2)                 NOT NULL default=0.00
+  - tax_amount               decimal(18,2)                NOT NULL default=0.00
+  - total_amount             decimal(18,2)                NOT NULL
+  Indexes:
+    * PRIMARY (UNIQUE): uid
+    * sales_invoice_details_product_uid_index (INDEX): product_uid
+    * sales_invoice_details_sales_invoice_uid_index (INDEX): sales_invoice_uid
+
+TABLE: stock_adjustments
+-----------------------
+  - uid                      int(10) unsigned             NOT NULL [PRI] auto_increment
+  - adjustment_no            varchar(50)                  NOT NULL [UNI]
+  - adjustment_date          timestamp                    NOT NULL default=current_timestamp()
+  - warehouse_uid            int(10) unsigned             NULL default=NULL
+  - user_uid                 int(10) unsigned             NULL default=NULL
+  - adjustment_type          varchar(50)                  NOT NULL
+  - status                   varchar(30)                  NOT NULL default='Completed'
+  - remarks                  varchar(500)                 NULL default=NULL
+  - created_date             timestamp                    NOT NULL default=current_timestamp()
+  - updated_date             timestamp                    NULL default=NULL
+  Indexes:
+    * PRIMARY (UNIQUE): uid
+    * stock_adjustments_adjustment_no_unique (UNIQUE): adjustment_no
+
+TABLE: stock_adjustment_details
+------------------------------
+  - uid                      int(10) unsigned             NOT NULL [PRI] auto_increment
+  - stock_adjustment_uid     int(10) unsigned             NOT NULL [MUL]
+  - product_uid              int(10) unsigned             NOT NULL
+  - quantity                 decimal(18,3)                NOT NULL
+  - remarks                  varchar(500)                 NULL default=NULL
+  Indexes:
+    * PRIMARY (UNIQUE): uid
+    * stock_adjustment_details_stock_adjustment_uid_index (INDEX): stock_adjustment_uid
+
+TABLE: sync_outboxes
+-------------------
+  - uid                      int(10) unsigned             NOT NULL [PRI] auto_increment
+  - table_name               varchar(100)                 NOT NULL
+  - record_uid               int(10) unsigned             NOT NULL
+  - operation                varchar(20)                  NOT NULL
+  - payload                  text                         NULL default=NULL
+  - status                   varchar(30)                  NOT NULL [MUL] default='Pending'
+  - attempt_count            int(11)                      NOT NULL default=0
+  - created_date             timestamp                    NOT NULL default=current_timestamp()
+  - processed_date           timestamp                    NULL default=NULL
+  Indexes:
+    * PRIMARY (UNIQUE): uid
+    * sync_outboxes_status_attempt_count_index (INDEX): status,attempt_count
+
+TABLE: terminals
+---------------
+  - uid                      int(10) unsigned             NOT NULL [PRI] auto_increment
+  - terminal_code            varchar(50)                  NOT NULL [UNI]
+  - terminal_name            varchar(150)                 NOT NULL
+  - branch_uid               int(10) unsigned             NULL default=NULL
+  - location                 varchar(500)                 NULL default=NULL
+  - is_active                tinyint(1)                   NOT NULL default=1
+  - created_date             timestamp                    NOT NULL default=current_timestamp()
+  - updated_date             timestamp                    NULL default=NULL
+  Indexes:
+    * PRIMARY (UNIQUE): uid
+    * terminals_terminal_code_unique (UNIQUE): terminal_code
+
+TABLE: users
+-----------
+  - uid                      int(10) unsigned             NOT NULL [PRI] auto_increment
+  - user_name                varchar(100)                 NOT NULL [UNI]
+  - full_name                varchar(200)                 NOT NULL
+  - password_hash            varchar(500)                 NOT NULL
+  - mobile_no                varchar(30)                  NULL default=NULL
+  - email                    varchar(150)                 NULL [MUL] default=NULL
+  - role_name                varchar(50)                  NOT NULL
+  - user_type                varchar(50)                  NULL default=NULL
+  - terminal_name            varchar(100)                 NULL default=NULL
+  - branch                   varchar(150)                 NULL default=NULL
+  - is_active                tinyint(1)                   NOT NULL default=1
+  - last_login_date          timestamp                    NULL default=NULL
+  - created_date             timestamp                    NOT NULL default=current_timestamp()
+  - updated_date             timestamp                    NULL default=NULL
+  Indexes:
+    * PRIMARY (UNIQUE): uid
+    * users_email_index (INDEX): email
+    * users_user_name_index (INDEX): user_name
+    * users_user_name_unique (UNIQUE): user_name
+
+TABLE: user_roles
+----------------
+  - uid                      int(10) unsigned             NOT NULL [PRI] auto_increment
+  - user_uid                 int(10) unsigned             NOT NULL [MUL]
+  - role_name                varchar(50)                  NOT NULL [MUL]
+  - created_date             timestamp                    NOT NULL default=current_timestamp()
+  Indexes:
+    * PRIMARY (UNIQUE): uid
+    * role_name (INDEX): role_name
+    * user_roles_user_role_unique (UNIQUE): user_uid,role_name
+    * user_uid (INDEX): user_uid
+
+TABLE: user_sessions
+-------------------
+  - uid                      int(10) unsigned             NOT NULL [PRI] auto_increment
+  - user_uid                 int(10) unsigned             NOT NULL [MUL]
+  - session_token            varchar(500)                 NOT NULL
+  - login_date               timestamp                    NOT NULL default=current_timestamp()
+  - logout_date              timestamp                    NULL default=NULL
+  - session_status           varchar(30)                  NOT NULL default='Active'
+  - ip_address               varchar(50)                  NULL default=NULL
+  Indexes:
+    * PRIMARY (UNIQUE): uid
+    * user_sessions_user_uid_index (INDEX): user_uid
+
+TABLE: vendors
+-------------
+  - uid                      int(10) unsigned             NOT NULL [PRI] auto_increment
+  - vendor_code              varchar(50)                  NOT NULL [UNI]
+  - vendor_name              varchar(200)                 NOT NULL [MUL]
+  - contact_person           varchar(150)                 NULL default=NULL
+  - mobile_no                varchar(30)                  NULL default=NULL
+  - phone_no                 varchar(30)                  NULL default=NULL
+  - email                    varchar(150)                 NULL default=NULL
+  - address                  varchar(500)                 NULL default=NULL
+  - city                     varchar(100)                 NULL default=NULL
+  - ntn                      varchar(50)                  NULL default=NULL
+  - opening_balance          decimal(18,2)                NOT NULL default=0.00
+  - credit_limit             decimal(18,2)                NOT NULL default=0.00
+  - is_active                tinyint(1)                   NOT NULL default=1
+  - created_date             timestamp                    NOT NULL default=current_timestamp()
+  - updated_date             timestamp                    NULL default=NULL
+  Indexes:
+    * PRIMARY (UNIQUE): uid
+    * vendors_vendor_code_index (INDEX): vendor_code
+    * vendors_vendor_code_unique (UNIQUE): vendor_code
+    * vendors_vendor_name_index (INDEX): vendor_name
+
+TABLE: vendor_payments
+---------------------
+  - uid                      int(10) unsigned             NOT NULL [PRI] auto_increment
+  - payment_no               varchar(50)                  NOT NULL [UNI]
+  - payment_date             timestamp                    NOT NULL [MUL] default=current_timestamp()
+  - vendor_uid               int(10) unsigned             NOT NULL [MUL]
+  - branch_uid               int(10) unsigned             NULL default=NULL
+  - user_uid                 int(10) unsigned             NULL default=NULL
+  - amount                   decimal(18,2)                NOT NULL
+  - payment_mode             varchar(50)                  NULL default=NULL
+  - reference_no             varchar(100)                 NULL default=NULL
+  - remarks                  varchar(500)                 NULL default=NULL
+  - created_date             timestamp                    NOT NULL default=current_timestamp()
+  - updated_date             timestamp                    NULL default=NULL
+  Indexes:
+    * PRIMARY (UNIQUE): uid
+    * vendor_payments_payment_date_index (INDEX): payment_date
+    * vendor_payments_payment_no_unique (UNIQUE): payment_no
+    * vendor_payments_vendor_uid_index (INDEX): vendor_uid
+
+TABLE: warehouses
+----------------
+  - uid                      int(10) unsigned             NOT NULL [PRI] auto_increment
+  - warehouse_code           varchar(50)                  NOT NULL [UNI]
+  - warehouse_name           varchar(150)                 NOT NULL
+  - location                 varchar(500)                 NULL default=NULL
+  - contact_person           varchar(150)                 NULL default=NULL
+  - mobile_no                varchar(30)                  NULL default=NULL
+  - is_active                tinyint(1)                   NOT NULL default=1
+  - created_date             timestamp                    NOT NULL default=current_timestamp()
+  - updated_date             timestamp                    NULL default=NULL
+  Indexes:
+    * PRIMARY (UNIQUE): uid
+    * warehouses_warehouse_code_unique (UNIQUE): warehouse_code

@@ -7,7 +7,7 @@
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <div>
             <h1 class="h3 page-heading mb-1">All Products</h1>
-            <p class="text-muted mb-0">Product catalog</p>
+            <p class="text-muted mb-0">Pharmacy product catalog</p>
         </div>
         <div class="d-flex gap-2 flex-wrap">
             <a href="{{ route('product-categories.create') }}" class="btn btn-outline-primary">
@@ -35,9 +35,9 @@
     <div class="card">
         <div class="card-body">
             <form method="GET" class="row g-2 align-items-center mb-3">
-                <div class="col-md-4">
+                <div class="col-md-5">
                     <input type="text" name="search" class="form-control"
-                           placeholder="Search by name, code, or barcode..."
+                           placeholder="Search name, generic, barcode, company..."
                            value="{{ request('search') }}">
                 </div>
                 <div class="col-md-3">
@@ -46,16 +46,6 @@
                         @foreach($categories as $category)
                         <option value="{{ $category->uid }}" {{ request('category_uid') == $category->uid ? 'selected' : '' }}>
                             {{ $category->category_name }}
-                        </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <select name="branch_uid" class="form-select">
-                        <option value="">All Branches</option>
-                        @foreach($branches as $branch)
-                        <option value="{{ $branch->uid }}" {{ request('branch_uid') == $branch->uid ? 'selected' : '' }}>
-                            {{ $branch->branch_name }}
                         </option>
                         @endforeach
                     </select>
@@ -70,11 +60,13 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead>
                         <tr>
-                            <th>Code</th>
-                            <th>Name</th>
+                            <th>Barcode</th>
+                            <th>Item Name</th>
+                            <th>Generic</th>
                             <th>Category</th>
-                            <th>Branch</th>
-                            <th class="text-end">Purchase Price</th>
+                            <th>Company</th>
+                            <th>Strength</th>
+                            <th>Pack</th>
                             <th class="text-end">Sale Price</th>
                             <th>Status</th>
                             <th class="text-nowrap">Actions</th>
@@ -83,12 +75,14 @@
                     <tbody>
                         @forelse($products as $product)
                         <tr>
-                            <td>{{ $product->product_code }}</td>
+                            <td>{{ $product->barcode ?: '—' }}</td>
                             <td>{{ $product->product_name }}</td>
-                            <td>{{ $product->category ? $product->category->category_name : '-' }}</td>
-                            <td>{{ $product->branch ? $product->branch->branch_name : '-' }}</td>
-                            <td class="text-end">Rs. {{ number_format($product->purchase_price, 2) }}</td>
-                            <td class="text-end">Rs. {{ number_format($product->sale_price, 2) }}</td>
+                            <td>{{ $product->generic_name ?: '—' }}</td>
+                            <td>{{ $product->category->category_name ?? '—' }}</td>
+                            <td>{{ $product->company_name ?: '—' }}</td>
+                            <td>{{ $product->strength ?: '—' }}</td>
+                            <td>{{ $product->pack_unit ?: '—' }}@if($product->units_per_pack > 1) ×{{ $product->units_per_pack }}@endif</td>
+                            <td class="text-end">Rs. {{ number_format((float) $product->sale_price, 2) }}</td>
                             <td>
                                 @if($product->is_active)
                                     <span class="badge bg-success">Active</span>
@@ -99,7 +93,7 @@
                             <td class="text-nowrap">
                                 <a href="{{ route('products.edit', $product->uid) }}" class="btn btn-sm btn-outline-primary">Edit</a>
                                 <form method="POST" action="{{ route('products.destroy', $product->uid) }}" class="d-inline"
-                                      onsubmit="return confirm('Permanently delete this product? This cannot be undone.');">
+                                      onsubmit="return confirm('Permanently delete this product?');">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
@@ -108,7 +102,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="8" class="text-center py-4 text-muted">No products found</td>
+                            <td colspan="10" class="text-center py-4 text-muted">No products found</td>
                         </tr>
                         @endforelse
                     </tbody>

@@ -31,6 +31,7 @@ yarn-error.log
 *.zip
 hostinger_export/
 storage/app/hostinger_export/
+storage/app/db_transfer/
 storage/app/*.sql
 DO_NOT_UPLOAD_HERE
 _default_bak/

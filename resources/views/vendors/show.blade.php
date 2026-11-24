@@ -99,13 +99,13 @@
                                 <tr>
                                     <td>
                                         <a href="{{ route('purchase-invoices.show', $invoice->uid) }}">
-                                            {{ $invoice->purchase_invoice_no }}
+                                            {{ $invoice->invoice_no }}
                                         </a>
-                                        @if($invoice->vendor_invoice_no)
-                                            <div class="small text-muted">Vendor #: {{ $invoice->vendor_invoice_no }}</div>
+                                        @if($invoice->supplier_invoice_no)
+                                            <div class="small text-muted">Supplier #: {{ $invoice->supplier_invoice_no }}</div>
                                         @endif
                                     </td>
-                                    <td>{{ optional($invoice->purchase_date)->format('d-M-Y') }}</td>
+                                    <td>{{ optional($invoice->invoice_date)->format('d-M-Y') }}</td>
                                     <td class="text-end">{{ number_format((float) $invoice->net_amount, 2) }}</td>
                                     <td class="text-end">{{ number_format((float) $invoice->paid_amount, 2) }}</td>
                                     <td class="text-end fw-semibold text-danger">{{ number_format((float) $invoice->balance_amount, 2) }}</td>
@@ -153,8 +153,8 @@
                     <tbody>
                         @forelse($invoices as $invoice)
                             <tr>
-                                <td>{{ $invoice->purchase_invoice_no }}</td>
-                                <td>{{ optional($invoice->purchase_date)->format('d-M-Y') }}</td>
+                                <td>{{ $invoice->invoice_no }}</td>
+                                <td>{{ optional($invoice->invoice_date)->format('d-M-Y') }}</td>
                                 <td class="text-end">{{ number_format((float) $invoice->net_amount, 2) }}</td>
                                 <td class="text-end">{{ number_format((float) $invoice->balance_amount, 2) }}</td>
                                 <td>{{ $invoice->payment_status ?: '—' }}</td>

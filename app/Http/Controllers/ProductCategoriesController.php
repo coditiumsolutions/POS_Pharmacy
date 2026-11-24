@@ -4,9 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\ProductCategory;
-use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
@@ -32,23 +30,23 @@ class ProductCategoriesController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'category_code' => 'required|string|max:50|unique:product_categories',
-            'category_name' => 'required|string|max:150',
-            'description' => 'nullable|string|max:500',
+            'category_name' => 'required|string|max:100',
+            'description' => 'nullable|string|max:255',
             'is_active' => 'nullable|boolean',
-            'category_image' => 'nullable|image|mimes:jpg,jpeg,png,gif,webp|max:2048',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,gif,webp|max:2048',
         ]);
-        $validated['is_active'] = $request->boolean('is_active');
-        $validated['created_date'] = now();
-        unset($validated['category_image']);
+        $validated['is_active'] = $request->boolean('is_active', true);
+        unset($validated['image']);
 
-        $category = ProductCategory::create($validated);
-
-        if ($request->hasFile('category_image')) {
-            $this->storeCategoryImage($category, $request->file('category_image'));
+        if ($request->hasFile('image')) {
+            [$path, $name] = $this->storeCategoryImage($request->file('image'));
+            $validated['image_path'] = $path;
+            $validated['image_name'] = $name;
         }
 
-        return redirect()->route('product-categories.index')->with('success', 'Category created!');
+        ProductCategory::create($validated);
+
+        return redirect()->route('product-categories.index')->with('success', 'Category created.');
     }
 
     public function edit($uid)
@@ -62,102 +60,99 @@ class ProductCategoriesController extends Controller
     {
         $category = ProductCategory::findOrFail($uid);
         $validated = $request->validate([
-            'category_code' => 'required|string|max:50|unique:product_categories,category_code,' . $uid . ',uid',
-            'category_name' => 'required|string|max:150',
-            'description' => 'nullable|string|max:500',
+            'category_name' => 'required|string|max:100',
+            'description' => 'nullable|string|max:255',
             'is_active' => 'nullable|boolean',
-            'category_image' => 'nullable|image|mimes:jpg,jpeg,png,gif,webp|max:2048',
-            'remove_category_image' => 'nullable|boolean',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,gif,webp|max:2048',
+            'remove_image' => 'nullable|boolean',
         ]);
-        $validated['is_active'] = $request->boolean('is_active');
-        $validated['updated_date'] = now();
-        unset($validated['category_image'], $validated['remove_category_image']);
+        $validated['is_active'] = $request->boolean('is_active', true);
+        unset($validated['image'], $validated['remove_image']);
 
-        if ($request->boolean('remove_category_image') && !empty($category->image_path)) {
-            $this->deleteCategoryImageFile($category->image_path);
+        if ($request->boolean('remove_image') && $category->image_path) {
+            $this->deletePublicFile($category->image_path);
             $validated['image_path'] = null;
             $validated['image_name'] = null;
         }
 
-        $category->update($validated);
-
-        if ($request->hasFile('category_image')) {
-            $this->storeCategoryImage($category, $request->file('category_image'));
+        if ($request->hasFile('image')) {
+            if ($category->image_path) {
+                $this->deletePublicFile($category->image_path);
+            }
+            [$path, $name] = $this->storeCategoryImage($request->file('image'));
+            $validated['image_path'] = $path;
+            $validated['image_name'] = $name;
         }
 
-        return redirect()->route('product-categories.index')->with('success', 'Category updated!');
+        $category->update($validated);
+
+        return redirect()->route('product-categories.index')->with('success', 'Category updated.');
     }
 
     public function destroy($uid)
     {
         $category = ProductCategory::findOrFail($uid);
-        $label = trim(($category->category_code ? $category->category_code . ' - ' : '') . ($category->category_name ?? 'Category'));
+        $label = $category->category_name ?? 'Category';
         $productCount = Product::where('category_uid', $uid)->count();
 
         if ($productCount > 0) {
             return back()->with(
                 'error',
-                "Cannot delete \"{$label}\" because it has {$productCount} product(s). Move or delete those products first."
+                "Cannot delete \"{$label}\" because it has {$productCount} product(s)."
             );
         }
 
-        try {
-            $imagePath = $category->image_path;
-            $category->delete();
-            $this->deleteCategoryImageFile($imagePath);
-        } catch (QueryException $e) {
-            return back()->with(
-                'error',
-                "Could not delete \"{$label}\" because it is still referenced by other records in the database."
-            );
+        if ($category->image_path) {
+            $this->deletePublicFile($category->image_path);
         }
 
-        return back()->with('success', "Category \"{$label}\" deleted successfully!");
+        $category->delete();
+
+        return back()->with('success', "Category \"{$label}\" deleted.");
     }
 
-    private function storeCategoryImage(ProductCategory $category, UploadedFile $file): void
+    /**
+     * @return array{0: string, 1: string} [relativePath, originalName]
+     */
+    private function storeCategoryImage($file): array
     {
-        $dir = public_path('uploads/categories');
+        $dir = $this->publicUploadRoot() . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'categories';
         if (!File::isDirectory($dir)) {
             File::makeDirectory($dir, 0755, true);
         }
 
-        if (!empty($category->image_path)) {
-            $this->deleteCategoryImageFile($category->image_path);
+        $original = $file->getClientOriginalName();
+        $ext = strtolower($file->getClientOriginalExtension() ?: 'jpg');
+        $stored = 'category-' . now()->format('YmdHis') . '-' . Str::lower(Str::random(6)) . '.' . $ext;
+        $file->move($dir, $stored);
+
+        // Keep local public/ in sync when Hostinger uses public_html as docroot.
+        $alt = public_path('uploads/categories');
+        if (realpath($alt) !== realpath($dir) && is_dir(dirname($alt))) {
+            if (!File::isDirectory($alt)) {
+                File::makeDirectory($alt, 0755, true);
+            }
+            @copy($dir . DIRECTORY_SEPARATOR . $stored, $alt . DIRECTORY_SEPARATOR . $stored);
         }
 
-        $originalName = $file->getClientOriginalName();
-        $ext = strtolower($file->getClientOriginalExtension() ?: 'png');
-        $storedName = 'category-' . $category->uid . '-' . Str::lower(Str::random(8)) . '.' . $ext;
-        $file->move($dir, $storedName);
-
-        $category->update([
-            'image_path' => 'uploads/categories/' . $storedName,
-            'image_name' => $originalName,
-            'updated_date' => now(),
-        ]);
-
-        $publicHtmlDir = base_path('public_html/uploads/categories');
-        if (File::isDirectory(base_path('public_html'))) {
-            if (!File::isDirectory($publicHtmlDir)) {
-                File::makeDirectory($publicHtmlDir, 0755, true);
-            }
-            $src = $dir . DIRECTORY_SEPARATOR . $storedName;
-            if (is_file($src)) {
-                @copy($src, $publicHtmlDir . DIRECTORY_SEPARATOR . $storedName);
-            }
-        }
+        return ['uploads/categories/' . $stored, $original];
     }
 
-    private function deleteCategoryImageFile(?string $relativePath): void
+    private function publicUploadRoot(): string
     {
-        $relativePath = trim((string) $relativePath);
-        if ($relativePath === '' || preg_match('#^https?://#i', $relativePath)) {
-            return;
+        $html = base_path('public_html');
+        if (is_dir($html)) {
+            return $html;
         }
 
-        $relativePath = ltrim(str_replace('\\', '/', $relativePath), '/');
-        foreach ([public_path($relativePath), base_path('public_html/' . $relativePath)] as $full) {
+        return public_path();
+    }
+
+    private function deletePublicFile(string $relativePath): void
+    {
+        $relativePath = ltrim(str_replace(['\\', '..'], ['/', ''], $relativePath), '/');
+        foreach ([$this->publicUploadRoot(), public_path()] as $root) {
+            $full = rtrim($root, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativePath);
             if (is_file($full)) {
                 @unlink($full);
             }

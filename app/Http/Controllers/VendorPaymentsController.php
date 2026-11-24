@@ -61,20 +61,21 @@ class VendorPaymentsController extends Controller
 
         if ($invoiceUid && !$vendorUid) {
             $focusInvoice = PurchaseInvoice::find($invoiceUid);
-            if ($focusInvoice) {
-                $vendorUid = $focusInvoice->vendor_uid;
+            if ($focusInvoice && $focusInvoice->supplier_name) {
+                $matched = Vendor::where('vendor_name', $focusInvoice->supplier_name)->first();
+                $vendorUid = $matched?->uid;
             }
         }
 
         if ($vendorUid) {
             $vendor = Vendor::findOrFail($vendorUid);
 
-            $invoices = PurchaseInvoice::where('vendor_uid', $vendorUid)
+            $invoices = PurchaseInvoice::where('supplier_name', $vendor->vendor_name)
                 ->where(function ($w) {
                     $w->whereNull('invoice_status')
                         ->orWhere('invoice_status', '!=', 'Cancelled');
                 })
-                ->orderByDesc('purchase_date')
+                ->orderByDesc('invoice_date')
                 ->orderByDesc('uid')
                 ->get();
 
@@ -146,9 +147,12 @@ class VendorPaymentsController extends Controller
         $branchUid = $validated['branch_uid'] ?: CurrentBranch::uid();
         $selectedInvoiceUid = $validated['selected_invoice_uid'] ?? null;
 
+        $vendor = Vendor::findOrFail($validated['vendor_uid']);
+        $supplierName = $vendor->vendor_name;
+
         if ($selectedInvoiceUid) {
             $selectedInvoice = PurchaseInvoice::where('uid', $selectedInvoiceUid)
-                ->where('vendor_uid', $validated['vendor_uid'])
+                ->where('supplier_name', $supplierName)
                 ->first();
             if (!$selectedInvoice || (float) $selectedInvoice->balance_amount <= 0) {
                 return back()->withInput()->withErrors([
@@ -188,7 +192,7 @@ class VendorPaymentsController extends Controller
 
             if ($selectedInvoiceUid) {
                 $invoice = PurchaseInvoice::where('uid', $selectedInvoiceUid)
-                    ->where('vendor_uid', $validated['vendor_uid'])
+                    ->where('supplier_name', $supplierName)
                     ->lockForUpdate()
                     ->first();
                 if ($invoice && (float) $invoice->balance_amount > 0) {
@@ -208,7 +212,7 @@ class VendorPaymentsController extends Controller
                             break;
                         }
                         $invoice = PurchaseInvoice::where('uid', $invoiceUid)
-                            ->where('vendor_uid', $validated['vendor_uid'])
+                            ->where('supplier_name', $supplierName)
                             ->lockForUpdate()
                             ->first();
                         if (!$invoice || (float) $invoice->balance_amount <= 0) {
@@ -220,13 +224,13 @@ class VendorPaymentsController extends Controller
                         $appliedTotal = round($appliedTotal + $amountToApply, 2);
                     }
                 } elseif ($request->boolean('auto_apply', true)) {
-                    $pending = PurchaseInvoice::where('vendor_uid', $validated['vendor_uid'])
+                    $pending = PurchaseInvoice::where('supplier_name', $supplierName)
                         ->where('balance_amount', '>', 0)
                         ->where(function ($w) {
                             $w->whereNull('invoice_status')
                                 ->orWhere('invoice_status', '!=', 'Cancelled');
                         })
-                        ->orderBy('purchase_date')
+                        ->orderBy('invoice_date')
                         ->orderBy('uid')
                         ->lockForUpdate()
                         ->get();

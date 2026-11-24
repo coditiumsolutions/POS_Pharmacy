@@ -44,26 +44,19 @@ class POSController extends Controller
         $branchUid = CurrentBranch::uid();
         $branchName = CurrentBranch::name() ?: (Auth::user()->branch ?? null);
 
-        $productsQuery = Product::with(['category', 'unit', 'branch'])
+        $productsQuery = Product::with(['category'])
             ->where('is_active', true);
-
-        // POS shows only products for the logged-in user's branch.
-        if ($branchUid) {
-            $productsQuery->where('branch_uid', $branchUid);
-        }
 
         $products = $productsQuery->orderBy('product_name')->get();
 
         $stockByProduct = [];
-        if ($branchUid && $products->isNotEmpty()) {
+        if ($products->isNotEmpty()) {
             $stockByProduct = Inventory::query()
-                ->where('branch_uid', $branchUid)
                 ->whereIn('product_uid', $products->pluck('uid'))
-                ->get(['product_uid', 'quantity_in_stock', 'quantity_available'])
-                ->mapWithKeys(function ($row) {
-                    $qty = $row->quantity_available ?? $row->quantity_in_stock ?? 0;
-                    return [(int) $row->product_uid => (float) $qty];
-                })
+                ->selectRaw('product_uid, SUM(quantity_in_stock) as qty')
+                ->groupBy('product_uid')
+                ->pluck('qty', 'product_uid')
+                ->map(fn ($qty) => (float) $qty)
                 ->all();
         }
 
@@ -95,27 +88,28 @@ class POSController extends Controller
         $search = $request->get('q', '');
         $branchUid = CurrentBranch::uid();
 
-        $products = Product::with(['category', 'unit'])
+        $products = Product::with(['category'])
             ->where('is_active', true)
-            ->when($branchUid, fn ($q) => $q->where('branch_uid', $branchUid))
             ->where(function ($query) use ($search) {
                 $query->where('product_name', 'like', "%{$search}%")
-                    ->orWhere('product_code', 'like', "%{$search}%")
-                    ->orWhere('barcode', 'like', "%{$search}%");
+                    ->orWhere('generic_name', 'like', "%{$search}%")
+                    ->orWhere('barcode', 'like', "%{$search}%")
+                    ->orWhere('company_name', 'like', "%{$search}%");
             })
             ->limit(50)
             ->get()
             ->map(function ($product) {
                 return [
                     'uid' => $product->uid,
-                    'product_code' => $product->product_code,
+                    'product_code' => $product->barcode,
                     'product_name' => $product->product_name,
                     'barcode' => $product->barcode,
                     'sale_price' => $product->sale_price,
-                    'tax_percent' => $product->tax_percent,
+                    'tax_percent' => 0,
                     'discount_percent' => $product->discount_percent,
                     'category_name' => $product->category ? $product->category->category_name : '',
-                    'unit_name' => $product->unit ? $product->unit->unit_name : '',
+                    'pack_unit' => $product->pack_unit ?: '',
+                    'unit_name' => $product->pack_unit ?: '',
                 ];
             });
 
@@ -257,26 +251,13 @@ class POSController extends Controller
 
         if ($inventory) {
             $inventory->quantity_in_stock = (float) $inventory->quantity_in_stock + $quantity;
-            $inventory->quantity_available = (float) $inventory->quantity_available + $quantity;
-            if ($quantity < 0) {
-                $inventory->quantity_out = (float) ($inventory->quantity_out ?? 0) + abs($quantity);
-            } else {
-                $inventory->quantity_in = (float) ($inventory->quantity_in ?? 0) + $quantity;
-            }
-            $inventory->updated_date = now();
             $inventory->save();
         } else {
-            $startQty = $quantity; // may be negative for first sale without prior stock
             Inventory::create([
                 'product_uid' => $productUid,
-                'branch_uid' => $branchUid,
-                'warehouse_uid' => null,
-                'quantity_in_stock' => $startQty,
-                'quantity_available' => $startQty,
-                'quantity_reserved' => 0,
-                'quantity_in' => $quantity > 0 ? $quantity : 0,
-                'quantity_out' => $quantity < 0 ? abs($quantity) : 0,
-                'updated_date' => now(),
+                'batch_no' => 'DEFAULT',
+                'quantity_in_stock' => $quantity,
+                'sale_price' => null,
             ]);
         }
 

@@ -28,7 +28,7 @@
                 <tr>
                     <th>Invoice</th>
                     <th>Date</th>
-                    <th>Vendor</th>
+                    <th>Supplier</th>
                     <th class="text-end">Net</th>
                     <th class="text-end">Paid</th>
                     <th class="text-end">Balance</th>
@@ -37,9 +37,9 @@
             <tbody>
                 @forelse($invoices as $inv)
                     <tr>
-                        <td>{{ $inv->purchase_invoice_no ?? $inv->invoice_no }}</td>
-                        <td>{{ optional($inv->purchase_date)->format('d-M-Y') }}</td>
-                        <td>{{ optional($inv->vendor)->vendor_name ?: '—' }}</td>
+                        <td>{{ $inv->invoice_no }}</td>
+                        <td>{{ optional($inv->invoice_date)->format('d-M-Y') }}</td>
+                        <td>{{ $inv->supplier_name ?: '—' }}</td>
                         <td class="text-end">{{ number_format((float) $inv->net_amount, 2) }}</td>
                         <td class="text-end">{{ number_format((float) $inv->paid_amount, 2) }}</td>
                         <td class="text-end">{{ number_format((float) $inv->balance_amount, 2) }}</td>

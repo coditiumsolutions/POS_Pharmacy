@@ -15,24 +15,29 @@ class PurchaseInvoiceDetail extends Model
 
     protected $fillable = [
         'purchase_invoice_uid',
-        'product_uid',
-        'quantity',
-        'unit_price',
-        'discount_percent',
+        'inventory_uid',
+        'purchase_quantity',
+        'bonus_quantity',
+        'loose_quantity',
+        'units_per_pack',
+        'received_base_quantity',
+        'purchase_price',
         'discount_amount',
-        'tax_percent',
         'tax_amount',
-        'total_amount',
+        'line_total',
+        'remarks',
     ];
 
     protected $casts = [
-        'quantity' => 'decimal:3',
-        'unit_price' => 'decimal:2',
-        'discount_percent' => 'decimal:2',
+        'purchase_quantity' => 'decimal:3',
+        'bonus_quantity' => 'decimal:3',
+        'loose_quantity' => 'decimal:3',
+        'units_per_pack' => 'decimal:3',
+        'received_base_quantity' => 'decimal:3',
+        'purchase_price' => 'decimal:2',
         'discount_amount' => 'decimal:2',
-        'tax_percent' => 'decimal:2',
         'tax_amount' => 'decimal:2',
-        'total_amount' => 'decimal:2',
+        'line_total' => 'decimal:2',
     ];
 
     public function purchaseInvoice()
@@ -40,8 +45,8 @@ class PurchaseInvoiceDetail extends Model
         return $this->belongsTo(PurchaseInvoice::class, 'purchase_invoice_uid', 'uid');
     }
 
-    public function product()
+    public function inventory()
     {
-        return $this->belongsTo(Product::class, 'product_uid', 'uid');
+        return $this->belongsTo(Inventory::class, 'inventory_uid', 'uid');
     }
 }

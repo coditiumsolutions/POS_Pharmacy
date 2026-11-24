@@ -410,6 +410,51 @@ a.pos-nav-link:hover { background: rgba(255, 255, 255, 0.06); color: #fff; text-
   padding: 0.28rem 0.35rem;
 }
 
+#cartTable {
+  table-layout: fixed;
+  width: 100%;
+}
+
+#cartTable .pos-cart-col-product {
+  width: 42%;
+  padding-right: 0.25rem !important;
+  vertical-align: middle;
+}
+
+#cartTable .pos-cart-col-pack {
+  width: 14%;
+  padding-left: 0.2rem !important;
+  padding-right: 0.2rem !important;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+#cartTable .pos-cart-col-qty {
+  width: 24%;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+#cartTable .pos-cart-col-total {
+  width: 14%;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+#cartTable .pos-cart-col-actions {
+  width: 6%;
+  padding-left: 0.15rem !important;
+  padding-right: 0.15rem !important;
+  vertical-align: middle;
+}
+
+#cartTable .pos-cart-item-name {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .pos-basket-totals {
   display: grid;
   gap: 0.2rem;

@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Coditium POS | Billing, Inventory &amp; Sales Software for Your Business</title>
-    <meta name="description" content="Billing, inventory, and sales reports in one place, built for retail shops, restaurants, pharmacies, and multi-branch businesses.">
-    <meta property="og:title" content="Coditium POS | Billing, Inventory &amp; Sales Software for Your Business">
-    <meta property="og:description" content="Billing, inventory, and sales reports in one place, built for retail shops, restaurants, pharmacies, and multi-branch businesses.">
+    <title>Coditium Pharmacy POS | Medicine Billing, Stock &amp; Pharmacy Store Software</title>
+    <meta name="description" content="Pharmacy POS for medical stores—fast medicine billing, expiry-aware stock, purchases, and sales reports built for pharmacies in Pakistan.">
+    <meta property="og:title" content="Coditium Pharmacy POS | Medicine Billing, Stock &amp; Pharmacy Store Software">
+    <meta property="og:description" content="Pharmacy POS for medical stores—fast medicine billing, expiry-aware stock, purchases, and sales reports built for pharmacies in Pakistan.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ url()->current() }}">
     <meta property="og:site_name" content="Coditium Solutions">
@@ -27,23 +27,23 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
         :root {
-            --navy: #0b1f3a;
-            --navy-deep: #071528;
-            --royal: #1d4ed8;
-            --cyan: #0891b2;
-            --cyan-soft: #67e8f9;
+            --navy: #0a2a32;
+            --navy-deep: #062026;
+            --royal: #0f766e;
+            --cyan: #0d9488;
+            --cyan-soft: #5eead4;
             --ink: #0f172a;
             --muted: #64748b;
             --card: #ffffff;
             --line: rgba(148, 163, 184, 0.28);
-            --surface: #f8fafc;
+            --surface: #f0fdfa;
             --shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
             --radius: 1.15rem;
             --font-display: "Outfit", system-ui, sans-serif;
             --font-body: "Source Sans 3", system-ui, sans-serif;
             --wa: #25d366;
-            --mustard: #d4a017;
-            --mustard-deep: #b8860b;
+            --mustard: #14b8a6;
+            --mustard-deep: #0f766e;
         }
 
         * { box-sizing: border-box; }
@@ -55,8 +55,8 @@
             font-family: var(--font-body);
             color: var(--ink);
             background:
-                linear-gradient(180deg, rgba(11, 31, 58, 0.55) 0%, rgba(248, 250, 252, 0.92) 42%, #ffffff 100%),
-                url("https://images.unsplash.com/photo-1556740738-b6a63e27c4df?auto=format&fit=crop&w=1920&q=80") center top / cover no-repeat fixed;
+                linear-gradient(180deg, rgba(6, 32, 38, 0.72) 0%, rgba(10, 42, 50, 0.55) 22%, rgba(240, 253, 250, 0.92) 58%, #ffffff 100%),
+                url("{{ asset('img/pharmacy-login-bg.jpg') }}") center top / cover no-repeat fixed;
             overflow-x: hidden;
         }
 
@@ -65,7 +65,7 @@
         input:focus-visible,
         .nav-link:focus-visible,
         .btn:focus-visible {
-            outline: 3px solid rgba(212, 160, 23, 0.65);
+            outline: 3px solid rgba(20, 184, 166, 0.65);
             outline-offset: 2px;
         }
 
@@ -89,8 +89,8 @@
             letter-spacing: -0.02em;
             display: inline-flex;
             align-items: center;
-            gap: 0.45rem;
-            font-size: 1rem;
+            gap: 0.4rem;
+            font-size: 0.88rem;
             padding-top: 0.2rem;
             padding-bottom: 0.2rem;
         }
@@ -103,8 +103,8 @@
             border-radius: 0.5rem;
             display: grid;
             place-items: center;
-            color: var(--navy-deep);
-            background: linear-gradient(135deg, var(--mustard) 0%, #f0c84a 100%);
+            color: #062026;
+            background: linear-gradient(135deg, var(--mustard) 0%, #5eead4 100%);
             font-size: 0.9rem;
             flex: 0 0 auto;
         }
@@ -147,7 +147,7 @@
         }
 
         .btn-demo {
-            background: linear-gradient(135deg, var(--mustard) 0%, #e8b923 100%);
+            background: linear-gradient(135deg, var(--mustard) 0%, #2dd4bf 100%);
             color: var(--navy-deep) !important;
             font-weight: 400;
             border: 0;
@@ -155,7 +155,7 @@
             padding: 0.3rem 0.85rem;
             font-size: 0.88rem;
             line-height: 1.2;
-            box-shadow: 0 6px 14px rgba(212, 160, 23, 0.24);
+            box-shadow: 0 6px 14px rgba(13, 148, 136, 0.28);
             text-decoration: none;
             display: inline-flex;
             align-items: center;
@@ -191,7 +191,12 @@
             padding: clamp(2rem, 5vw, 4rem) 0 clamp(3rem, 6vw, 5rem);
             isolation: isolate;
             overflow: hidden;
-            background: transparent;
+            min-height: min(72vh, 640px);
+            display: flex;
+            align-items: center;
+            background:
+                linear-gradient(115deg, rgba(6, 32, 38, 0.78) 0%, rgba(10, 42, 50, 0.58) 42%, rgba(15, 118, 110, 0.42) 100%),
+                url("{{ asset('img/pharmacy-login-bg.jpg') }}") center / cover no-repeat;
         }
 
         .hero::before {
@@ -200,38 +205,46 @@
             inset: 0;
             z-index: -1;
             background:
-                linear-gradient(115deg, rgba(255, 255, 255, 0.78) 0%, rgba(255, 255, 255, 0.55) 38%, rgba(255, 255, 255, 0.18) 68%, rgba(11, 31, 58, 0.22) 100%),
-                url("https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1920&q=80") center / cover no-repeat;
+                radial-gradient(800px 420px at 18% 12%, rgba(94, 234, 212, 0.18), transparent 62%),
+                linear-gradient(180deg, rgba(6, 32, 38, 0.18) 0%, rgba(6, 32, 38, 0.08) 100%);
+            pointer-events: none;
+        }
+
+        .hero > .container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
         }
 
         .hero-copy {
             position: relative;
             max-width: 36rem;
             padding: clamp(1.15rem, 2.4vw, 1.75rem) clamp(1.15rem, 2.6vw, 1.9rem);
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.88);
             border-radius: 0.35rem;
-            box-shadow: none;
-            border: 0;
+            box-shadow: 0 14px 36px rgba(6, 32, 38, 0.18);
+            border: 1px solid rgba(255, 255, 255, 0.55);
+            backdrop-filter: blur(6px);
         }
 
         .hero-copy h1 {
             font-family: var(--font-display);
-            font-size: clamp(2.15rem, 4.4vw, 3.35rem);
-            font-weight: 800;
-            letter-spacing: -0.025em;
-            line-height: 1.18;
+            font-size: clamp(1.45rem, 2.6vw, 1.95rem);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            line-height: 1.22;
             color: #04101f;
-            margin: 0 0 1rem;
-            max-width: 18ch;
+            margin: 0 0 0.75rem;
+            max-width: 22ch;
             text-wrap: balance;
             text-shadow: none;
         }
 
         .hero-copy .lead {
-            font-size: clamp(1.05rem, 1.55vw, 1.22rem);
+            font-size: clamp(0.95rem, 1.25vw, 1.05rem);
             color: #0f172a;
             max-width: 34rem;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.25rem;
             line-height: 1.55;
             font-weight: 500;
             text-shadow: none;
@@ -258,11 +271,12 @@
 
         .login-card {
             width: min(420px, 100%);
-            background: var(--card);
+            background: rgba(255, 255, 255, 0.94);
             border-radius: var(--radius);
-            border: 1px solid var(--line);
-            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.65);
+            box-shadow: 0 18px 44px rgba(6, 32, 38, 0.22);
             padding: clamp(1.4rem, 3vw, 2.15rem);
+            backdrop-filter: blur(8px);
         }
 
         .login-logo {
@@ -275,7 +289,7 @@
             color: #fff;
             font-size: 1.45rem;
             background: linear-gradient(135deg, var(--royal) 0%, var(--cyan) 100%);
-            box-shadow: 0 12px 24px rgba(29, 78, 216, 0.28);
+            box-shadow: 0 12px 24px rgba(13, 148, 136, 0.28);
         }
 
         .login-card .subtitle {
@@ -390,21 +404,21 @@
             font-size: 1.02rem;
             letter-spacing: 0.01em;
             color: #fff;
-            background: linear-gradient(135deg, #1d4ed8 0%, #0891b2 100%);
-            box-shadow: 0 12px 24px rgba(29, 78, 216, 0.28);
+            background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+            box-shadow: 0 12px 24px rgba(13, 148, 136, 0.28);
             transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
         }
 
         .btn-login:hover {
             color: #fff;
             transform: translateY(-2px);
-            box-shadow: 0 16px 28px rgba(29, 78, 216, 0.36);
+            box-shadow: 0 16px 28px rgba(13, 148, 136, 0.36);
             filter: saturate(1.08);
         }
 
         .btn-login:active {
             transform: translateY(0);
-            box-shadow: 0 8px 16px rgba(29, 78, 216, 0.25);
+            box-shadow: 0 8px 16px rgba(13, 148, 136, 0.25);
         }
 
         .login-alert {
@@ -640,14 +654,14 @@
 </head>
 <body>
     @php
-        $whatsappDemoUrl = 'https://wa.me/923335191392?text=Hi%2C%20I%20would%20like%20a%20demo%20of%20Coditium%20POS';
+        $whatsappDemoUrl = 'https://wa.me/923335191392?text=Hi%2C%20I%20would%20like%20a%20demo%20of%20Coditium%20Pharmacy%20POS';
     @endphp
 
     <nav class="navbar navbar-expand-lg site-nav" aria-label="Primary">
         <div class="container">
             <a class="navbar-brand" href="#top">
-                <span class="brand-mark" aria-hidden="true"><i class="bi bi-cart4"></i></span>
-                Coditium POS
+                <span class="brand-mark" aria-hidden="true"><i class="bi bi-capsule"></i></span>
+                Coditium Pharmacy POS
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#primaryNav" aria-controls="primaryNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -678,28 +692,27 @@
             <div class="container">
                 <div class="row align-items-center g-4 g-lg-5">
                     <div class="col-lg-6 hero-copy">
-                        <h1>Run Your Entire Store from One Simple POS</h1>
-                        <p class="lead">Billing, inventory, and sales reports in one place, built for retail shops, restaurants, pharmacies, and multi-branch businesses.</p>
+                        <h1>Coditium Pharmacy POS</h1>
+                        <p class="lead">Medicine billing, stock, and pharmacy reports in one place—built for medical stores and pharmacy counters.</p>
                         <div class="hero-actions">
                             <a class="btn-demo" href="{{ $whatsappDemoUrl }}" target="_blank" rel="noopener noreferrer">
                                 <i class="bi bi-whatsapp" aria-hidden="true"></i>
                                 Book a Free Demo
                             </a>
                             <a class="btn-outline-soft" href="#login" id="startTrialBtn">
-                                Start Free Trial
+                                Sign in to Pharmacy
                             </a>
                         </div>
-                        {{-- TODO: replace with verified metrics; do not invent statistics --}}
-                        <p class="trust-line mb-0">Setup in under 1 day · Works online &amp; offline · Local support</p>
+                        <p class="trust-line mb-0">Expiry-aware stock · Fast medicine billing · Local pharmacy support</p>
                     </div>
 
                     <div class="col-lg-6">
                         <div class="login-panel" id="login">
                             <div class="login-card">
                                 <div class="login-logo" aria-hidden="true">
-                                    <i class="bi bi-cart4"></i>
+                                    <i class="bi bi-capsule-pill"></i>
                                 </div>
-                                <p class="subtitle">Sign in to access your POS dashboard.</p>
+                                <p class="subtitle">Sign in to your pharmacy store dashboard.</p>
 
                                 @if($errors->any())
                                     <div class="login-alert" role="alert">
@@ -709,7 +722,7 @@
                                     </div>
                                 @endif
 
-                                <form method="POST" action="{{ route('login') }}" autocomplete="on">
+                                <form method="POST" action="{{ url('/login') }}" autocomplete="on">
                                     @csrf
 
                                     <div class="mb-3">
@@ -725,7 +738,7 @@
                                                 required
                                                 autofocus
                                                 autocomplete="username"
-                                                placeholder="Enter your username">
+                                                placeholder="admin">
                                         </div>
                                     </div>
 
@@ -761,7 +774,10 @@
                                     </button>
                                 </form>
 
-                                <div class="login-footnote">Secure access to your Coditium POS workspace</div>
+                                <div class="login-footnote">
+                                    Prefer a simpler screen?
+                                    <a href="{{ url('/signin') }}">Open quick sign-in</a>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -772,36 +788,36 @@
         <section class="section" id="features">
             <div class="container">
                 <div class="text-center">
-                    <h2 class="section-title">Everything you need to run the counter</h2>
-                    <p class="section-lead">Inventory, billing, reports, and staff control—designed for busy shops in Pakistan.</p>
+                    <h2 class="section-title">Everything your pharmacy counter needs</h2>
+                    <p class="section-lead">Medicine stock, billing, purchases, and staff control—designed for pharmacy stores in Pakistan.</p>
                 </div>
                 <div class="row g-4">
                     <div class="col-md-6 col-xl-3">
                         <article class="feature-card">
-                            <div class="feature-icon" aria-hidden="true"><i class="bi bi-box-seam"></i></div>
-                            <h3>Never run out of stock</h3>
-                            <p>Track inventory across all branches in real time and get low-stock alerts.</p>
+                            <div class="feature-icon" aria-hidden="true"><i class="bi bi-capsule"></i></div>
+                            <h3>Medicine stock under control</h3>
+                            <p>Track batches, low stock, and expiry so shelves stay ready for every prescription.</p>
                         </article>
                     </div>
                     <div class="col-md-6 col-xl-3">
                         <article class="feature-card">
-                            <div class="feature-icon" aria-hidden="true"><i class="bi bi-lightning-charge"></i></div>
-                            <h3>Bill customers in seconds</h3>
-                            <p>Fast checkout with barcode scanning, receipts, and multiple payment methods.</p>
+                            <div class="feature-icon" aria-hidden="true"><i class="bi bi-receipt"></i></div>
+                            <h3>Bill medicines in seconds</h3>
+                            <p>Fast pharmacy checkout with barcode scanning, receipts, and clear customer totals.</p>
                         </article>
                     </div>
                     <div class="col-md-6 col-xl-3">
                         <article class="feature-card">
                             <div class="feature-icon" aria-hidden="true"><i class="bi bi-graph-up-arrow"></i></div>
-                            <h3>See what's making money</h3>
-                            <p>Daily sales, profit, and best-seller reports on your phone.</p>
+                            <h3>Know what sells daily</h3>
+                            <p>Daily sales, purchase, and best-selling medicine reports for smarter ordering.</p>
                         </article>
                     </div>
                     <div class="col-md-6 col-xl-3">
                         <article class="feature-card">
-                            <div class="feature-icon" aria-hidden="true"><i class="bi bi-people"></i></div>
-                            <h3>Manage staff and branches</h3>
-                            <p>Control who can see and do what, from anywhere.</p>
+                            <div class="feature-icon" aria-hidden="true"><i class="bi bi-shop"></i></div>
+                            <h3>Run one store or many</h3>
+                            <p>Manage staff permissions and branches from one pharmacy workspace.</p>
                         </article>
                     </div>
                 </div>
@@ -812,16 +828,16 @@
             <div class="container">
                 <div class="text-center">
                     <h2 class="section-title">Who it's for</h2>
-                    <p class="section-lead">Built for the businesses that keep Pakistan's high streets running.</p>
+                    <p class="section-lead">Built for pharmacy stores that keep communities healthy across Pakistan.</p>
                 </div>
-                <div class="row g-3 g-md-4">
+                <div class="row g-3 g-md-4 justify-content-center">
                     @foreach([
-                        ['bi-shop', 'Retail Shops'],
-                        ['bi-cup-hot', 'Restaurants & Cafes'],
-                        ['bi-capsule', 'Pharmacies'],
-                        ['bi-basket2', 'Supermarkets'],
-                        ['bi-scissors', 'Salons'],
-                        ['bi-building', 'Multi-Branch Businesses'],
+                        ['bi-capsule', 'Retail Pharmacies'],
+                        ['bi-hospital', 'Medical Stores'],
+                        ['bi-prescription2', 'Clinic Pharmacies'],
+                        ['bi-building', 'Chain Pharmacies'],
+                        ['bi-heart-pulse', 'Hospital Outlets'],
+                        ['bi-bag-plus', 'Wholesale Chemists'],
                     ] as [$icon, $label])
                         <div class="col-6 col-md-4 col-xl-2">
                             <div class="audience-tile">
@@ -838,28 +854,28 @@
             <div class="container">
                 <div class="text-center">
                     <h2 class="section-title">How it works</h2>
-                    <p class="section-lead">From first call to first sale—without slowing down your shop floor.</p>
+                    <p class="section-lead">From first call to first medicine sale—without slowing your pharmacy counter.</p>
                 </div>
                 <div class="row g-4">
                     <div class="col-md-4">
                         <article class="step-card">
                             <div class="step-num" aria-hidden="true">1</div>
                             <h3>Sign up or request a demo</h3>
-                            <p>Tell us about your store and we will show Coditium POS in action.</p>
+                            <p>Tell us about your pharmacy and we will show Coditium Pharmacy POS in action.</p>
                         </article>
                     </div>
                     <div class="col-md-4">
                         <article class="step-card">
                             <div class="step-num" aria-hidden="true">2</div>
-                            <h3>We set up your products and branches</h3>
-                            <p>Import catalog, configure branches, and prepare your team to go live.</p>
+                            <h3>We set up your medicines and branches</h3>
+                            <p>Import medicine catalog, configure stock, and prepare your pharmacy team to go live.</p>
                         </article>
                     </div>
                     <div class="col-md-4">
                         <article class="step-card">
                             <div class="step-num" aria-hidden="true">3</div>
-                            <h3>Start selling and track growth</h3>
-                            <p>Bill customers, watch inventory, and follow sales from day one.</p>
+                            <h3>Start dispensing and track growth</h3>
+                            <p>Bill customers, watch medicine inventory, and follow pharmacy sales from day one.</p>
                         </article>
                     </div>
                 </div>
@@ -869,15 +885,15 @@
         <section class="section section-muted" id="screenshots" aria-labelledby="screenshots-heading">
             <div class="container">
                 <div class="text-center">
-                    <h2 class="section-title" id="screenshots-heading">See Coditium POS</h2>
-                    <p class="section-lead">Product screenshots coming soon.</p>
+                    <h2 class="section-title" id="screenshots-heading">See Coditium Pharmacy POS</h2>
+                    <p class="section-lead">Pharmacy product screenshots coming soon.</p>
                 </div>
                 {{-- TODO: replace with real product screenshots --}}
                 <div class="row g-4">
                     <div class="col-md-4">
                         <div class="shot-card">
-                            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='360'%3E%3Crect fill='%23e2e8f0' width='100%25' height='100%25'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%2364748b' font-family='sans-serif' font-size='22'%3EPOS screen placeholder%3C/text%3E%3C/svg%3E" alt="Placeholder for Coditium POS sales screen screenshot">
-                            <span class="mt-2 d-block">Sales screen (TODO)</span>
+                            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='360'%3E%3Crect fill='%23ccfbf1' width='100%25' height='100%25'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%230f766e' font-family='sans-serif' font-size='22'%3EPharmacy POS screen%3C/text%3E%3C/svg%3E" alt="Placeholder for Coditium Pharmacy POS sales screen screenshot">
+                            <span class="mt-2 d-block">Pharmacy sales screen (TODO)</span>
                         </div>
                     </div>
                     <div class="col-md-4">
@@ -956,7 +972,7 @@
                                 </h3>
                                 <div id="faqTwo" class="accordion-collapse collapse" aria-labelledby="faqTwoHeading" data-bs-parent="#faqAccordion">
                                     <div class="accordion-body">
-                                        Coditium POS is designed to keep your counter moving when connectivity dips, then sync when you are back online. <!-- TODO: confirm FAQ answers with Coditium -->
+                                        Coditium Pharmacy POS is designed to keep your medicine counter moving when connectivity dips, then sync when you are back online. <!-- TODO: confirm FAQ answers with Coditium -->
                                     </div>
                                 </div>
                             </div>
@@ -1007,8 +1023,8 @@
                 <div class="cta-banner">
                     <div class="row align-items-center g-3">
                         <div class="col-lg-8">
-                            <h2>Ready to simplify your store?</h2>
-                            <p class="mb-2">Book a free demo with Coditium Solutions and see Coditium POS on your counter.</p>
+                            <h2>Ready to modernize your pharmacy?</h2>
+                            <p class="mb-2">Book a free demo with Coditium Solutions and see Pharmacy POS on your medicine counter.</p>
                             <p class="mb-0">
                                 Cell / WhatsApp:
                                 <a class="contact-link" href="tel:+923335191392">0333-5191392</a>

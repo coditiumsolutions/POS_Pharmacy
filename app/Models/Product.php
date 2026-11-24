@@ -13,58 +13,37 @@ class Product extends Model
     protected $primaryKey = 'uid';
     public $timestamps = false;
 
-    const CREATED_AT = 'created_date';
-    const UPDATED_AT = 'updated_date';
-
     protected $fillable = [
-        'product_code',
         'barcode',
         'product_name',
+        'generic_name',
         'category_uid',
-        'branch_uid',
-        'unit_uid',
-        'brand_name',
-        'purchase_price',
+        'company_name',
+        'strength',
+        'pack_unit',
+        'units_per_pack',
         'sale_price',
-        'wholesale_price',
-        'minimum_stock',
-        'maximum_stock',
-        'tax_percent',
         'discount_percent',
-        'is_taxable',
+        'reorder_level',
+        'allow_loose_sale',
+        'is_prescription_required',
+        'remarks',
         'is_active',
-        'description',
-        'image_path',
-        'image_name',
     ];
 
     protected $casts = [
-        'purchase_price' => 'decimal:2',
+        'units_per_pack' => 'integer',
         'sale_price' => 'decimal:2',
-        'wholesale_price' => 'decimal:2',
-        'minimum_stock' => 'decimal:3',
-        'maximum_stock' => 'decimal:3',
-        'tax_percent' => 'decimal:2',
         'discount_percent' => 'decimal:2',
-        'is_taxable' => 'boolean',
+        'reorder_level' => 'decimal:2',
+        'allow_loose_sale' => 'boolean',
+        'is_prescription_required' => 'boolean',
         'is_active' => 'boolean',
-        'created_date' => 'datetime',
-        'updated_date' => 'datetime',
     ];
 
     public function category()
     {
         return $this->belongsTo(ProductCategory::class, 'category_uid', 'uid');
-    }
-
-    public function branch()
-    {
-        return $this->belongsTo(Branch::class, 'branch_uid', 'uid');
-    }
-
-    public function unit()
-    {
-        return $this->belongsTo(ProductUnit::class, 'unit_uid', 'uid');
     }
 
     public function inventories()

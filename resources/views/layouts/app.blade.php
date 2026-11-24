@@ -8,6 +8,8 @@
     $currentArea = NavigationCatalog::findArea($navKey);
     $topAreas = NavigationCatalog::topAreas();
     $topNavbarTitle = SystemSettings::topNavbarTitle();
+    $navbarPrimaryColor = SystemSettings::navbarPrimaryColor();
+    $navbarSecondaryColor = SystemSettings::navbarSecondaryColor();
     $collapseSidebarByDefault = request()->routeIs('pos.*');
 @endphp
 <!DOCTYPE html>
@@ -17,10 +19,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Home') - {{ $topNavbarTitle }}</title>
-    <meta name="theme-color" content="#0f766e">
+    <meta name="theme-color" content="{{ $navbarPrimaryColor }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ asset('css/site.css') }}?v={{ @filemtime(public_path('css/site.css')) ?: time() }}">
+    <style>
+        :root {
+            --pos-sidebar: {{ $navbarPrimaryColor }};
+            --pos-topbar: {{ $navbarSecondaryColor }};
+            --pos-gold: {{ $navbarSecondaryColor }};
+        }
+        .pos-topbar-secondary {
+            border-bottom-color: {{ $navbarPrimaryColor }};
+        }
+    </style>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">

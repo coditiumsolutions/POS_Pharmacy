@@ -69,6 +69,7 @@
                                  data-code="{{ $product->product_code }}"
                                  data-barcode="{{ $product->barcode ?: $product->product_code }}"
                                  data-name="{{ $product->product_name }}"
+                                 data-pack-unit="{{ $product->pack_unit }}"
                                  data-price="{{ $product->sale_price }}"
                                  data-tax="{{ $product->tax_percent }}"
                                  data-discount="{{ $product->discount_percent }}"
@@ -93,6 +94,7 @@
                                         data-name="{{ $product->product_name }}"
                                         data-barcode="{{ $product->barcode }}"
                                         data-code="{{ $product->product_code }}"
+                                        data-pack-unit="{{ $product->pack_unit }}"
                                         data-price="{{ $product->sale_price }}"
                                         data-tax="{{ $product->tax_percent }}"
                                         data-discount="{{ $product->discount_percent }}"
@@ -149,15 +151,16 @@
                         <table class="table table-sm align-middle mb-0" id="cartTable">
                             <thead>
                                 <tr>
-                                    <th>Product</th>
-                                    <th width="110" class="text-center">Qty</th>
-                                    <th width="72" class="text-end">Total</th>
-                                    <th width="28"></th>
+                                    <th class="pos-cart-col-product">Product</th>
+                                    <th class="pos-cart-col-pack text-center">PackUnit</th>
+                                    <th class="pos-cart-col-qty text-center">Qty</th>
+                                    <th class="pos-cart-col-total text-end">Total</th>
+                                    <th class="pos-cart-col-actions"></th>
                                 </tr>
                             </thead>
                             <tbody id="cartItems">
                                 <tr id="emptyCart">
-                                    <td colspan="4" class="text-center text-muted py-2">Cart is empty</td>
+                                    <td colspan="5" class="text-center text-muted py-2">Cart is empty</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -302,10 +305,14 @@ function addProductToCart(product) {
     if (existingIndex >= 0) {
         cart[existingIndex].quantity++;
         cart[existingIndex].stock = stock;
+        if (product.pack_unit) {
+            cart[existingIndex].pack_unit = product.pack_unit;
+        }
     } else {
         cart.push({
             uid: product.uid,
             name: product.name,
+            pack_unit: product.pack_unit || '',
             price: parseFloat(product.price) || 0,
             tax_percent: parseFloat(product.tax_percent) || 0,
             discount_percent: parseFloat(product.discount_percent) || 0,
@@ -430,6 +437,7 @@ $(document).ready(function() {
             addProductToCart({
                 uid: el.getAttribute('data-uid'),
                 name: el.getAttribute('data-name'),
+                pack_unit: el.getAttribute('data-pack-unit'),
                 price: el.getAttribute('data-price'),
                 tax_percent: el.getAttribute('data-tax'),
                 discount_percent: el.getAttribute('data-discount'),
@@ -594,6 +602,7 @@ $(document).ready(function() {
             addProductToCart({
                 uid: row.getAttribute('data-uid'),
                 name: row.getAttribute('data-name'),
+                pack_unit: row.getAttribute('data-pack-unit'),
                 price: row.getAttribute('data-price'),
                 tax_percent: row.getAttribute('data-tax'),
                 discount_percent: row.getAttribute('data-discount'),
@@ -732,7 +741,7 @@ function updateCart() {
     tbody.empty();
 
     if (cart.length === 0) {
-        tbody.append('<tr id="emptyCart"><td colspan="4" class="text-center text-muted">Cart is empty</td></tr>');
+        tbody.append('<tr id="emptyCart"><td colspan="5" class="text-center text-muted">Cart is empty</td></tr>');
         $('#subtotalDisplay').text('Rs. 0.00');
         $('#discountDisplay').text('Rs. 0.00');
         $('#discountAmount').val('0.00');
@@ -759,10 +768,12 @@ function updateCart() {
         totalTax += tax;
 
         const label = `${item.name} ${formatCartPrice(item.price)}`;
+        const packUnit = escapeHtml(item.pack_unit || '—');
         const row = `
             <tr>
-                <td><span class="pos-cart-item-name">${label}</span></td>
-                <td>
+                <td class="pos-cart-col-product"><span class="pos-cart-item-name">${label}</span></td>
+                <td class="pos-cart-col-pack text-center"><small>${packUnit}</small></td>
+                <td class="pos-cart-col-qty">
                     <div class="pos-qty-stepper">
                         <button type="button" class="btn btn-sm btn-outline-secondary qty-minus" data-index="${index}" aria-label="Decrease quantity">−</button>
                         <input type="number" class="form-control form-control-sm qty-input" value="${item.quantity}"
@@ -770,8 +781,8 @@ function updateCart() {
                         <button type="button" class="btn btn-sm btn-outline-secondary qty-plus" data-index="${index}" aria-label="Increase quantity">+</button>
                     </div>
                 </td>
-                <td class="text-end"><small>Rs. ${itemTotal.toFixed(2)}</small></td>
-                <td><button type="button" class="btn btn-sm btn-danger remove-item" data-index="${index}">×</button></td>
+                <td class="pos-cart-col-total text-end"><small>Rs. ${itemTotal.toFixed(2)}</small></td>
+                <td class="pos-cart-col-actions"><button type="button" class="btn btn-sm btn-danger remove-item" data-index="${index}">×</button></td>
             </tr>
         `;
         tbody.append(row);

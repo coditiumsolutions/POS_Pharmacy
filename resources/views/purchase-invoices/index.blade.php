@@ -11,22 +11,22 @@
     <div class="card">
         <div class="card-body">
             <form method="GET" class="row g-3 mb-4">
+                <div class="col-md-2">
+                    <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}" title="From date">
+                </div>
+                <div class="col-md-2">
+                    <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}" title="To date">
+                </div>
                 <div class="col-md-3">
-                    <select name="vendor_uid" class="form-select">
-                        <option value="">All Vendors</option>
-                        @foreach($vendors as $vendor)
-                        <option value="{{ $vendor->uid }}" {{ request('vendor_uid') == $vendor->uid ? 'selected' : '' }}>{{ $vendor->vendor_name }}</option>
+                    <input type="text" name="search" class="form-control" placeholder="Invoice / supplier..." value="{{ request('search') }}">
+                </div>
+                <div class="col-md-2">
+                    <select name="payment_status" class="form-select">
+                        <option value="">All payments</option>
+                        @foreach(['Unpaid','Partial','Paid'] as $ps)
+                            <option value="{{ $ps }}" @selected(request('payment_status') === $ps)>{{ $ps }}</option>
                         @endforeach
                     </select>
-                </div>
-                <div class="col-md-2">
-                    <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}">
-                </div>
-                <div class="col-md-2">
-                    <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}">
-                </div>
-                <div class="col-md-3">
-                    <input type="text" name="search" class="form-control" placeholder="Search..." value="{{ request('search') }}">
                 </div>
                 <div class="col-md-2">
                     <button type="submit" class="btn btn-secondary">Filter</button>
@@ -38,9 +38,10 @@
                         <tr>
                             <th>Invoice No</th>
                             <th>Date</th>
-                            <th>Vendor</th>
+                            <th>Supplier</th>
                             <th>Amount</th>
                             <th>Paid</th>
+                            <th>Payment</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
@@ -48,12 +49,13 @@
                     <tbody>
                         @forelse($invoices as $invoice)
                         <tr>
-                            <td>{{ $invoice->purchase_invoice_no }}</td>
-                            <td>{{ $invoice->purchase_date->format('Y-m-d') }}</td>
-                            <td>{{ $invoice->vendor->vendor_name }}</td>
-                            <td>Rs. {{ number_format($invoice->net_amount, 2) }}</td>
-                            <td>Rs. {{ number_format($invoice->paid_amount, 2) }}</td>
-                            <td><span class="badge bg-{{ $invoice->payment_status == 'Paid' ? 'success' : 'warning' }}">{{ $invoice->payment_status }}</span></td>
+                            <td>{{ $invoice->invoice_no }}</td>
+                            <td>{{ optional($invoice->invoice_date)->format('Y-m-d') }}</td>
+                            <td>{{ $invoice->supplier_name }}</td>
+                            <td>Rs. {{ number_format((float) $invoice->net_amount, 2) }}</td>
+                            <td>Rs. {{ number_format((float) $invoice->paid_amount, 2) }}</td>
+                            <td><span class="badge bg-{{ $invoice->payment_status == 'Paid' ? 'success' : ($invoice->payment_status == 'Partial' ? 'info' : 'warning') }}">{{ $invoice->payment_status }}</span></td>
+                            <td>{{ $invoice->invoice_status }}</td>
                             <td>
                                 <a href="{{ route('purchase-invoices.show', $invoice->uid) }}" class="btn btn-sm btn-info">View</a>
                                 <a href="{{ route('purchase-invoices.edit', $invoice->uid) }}" class="btn btn-sm btn-primary">Edit</a>
@@ -61,7 +63,7 @@
                             </td>
                         </tr>
                         @empty
-                        <tr><td colspan="7" class="text-center">No invoices found</td></tr>
+                        <tr><td colspan="8" class="text-center">No invoices found</td></tr>
                         @endforelse
                     </tbody>
                 </table>

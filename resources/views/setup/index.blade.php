@@ -13,7 +13,7 @@
                     <i class="bi bi-gear-wide-connected" style="color:#2563eb;font-size:1.35rem;"></i>
                     <span class="fw-semibold text-dark">System Setup</span>
                 </div>
-                <div class="small text-muted">Top Navbar, Print Slip heading, and Print Slip image</div>
+                <div class="small text-muted">Navbar colors, Top Navbar title, Print Slip heading, and Print Slip image</div>
             </div>
         </a>
     </div>

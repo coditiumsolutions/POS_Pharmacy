@@ -28,10 +28,10 @@ class DashboardController extends Controller
         $monthSales = SalesInvoice::whereDate('invoice_date', '>=', $monthStart)
             ->sum('net_amount');
 
-        $todayPurchases = PurchaseInvoice::whereDate('purchase_date', $today)
+        $todayPurchases = PurchaseInvoice::whereDate('invoice_date', $today)
             ->sum('net_amount');
 
-        $monthPurchases = PurchaseInvoice::whereDate('purchase_date', '>=', $monthStart)
+        $monthPurchases = PurchaseInvoice::whereDate('invoice_date', '>=', $monthStart)
             ->sum('net_amount');
 
         $todayExpenses = Expense::whereDate('expense_date', $today)
@@ -51,8 +51,8 @@ class DashboardController extends Controller
         $lowStockProducts = DB::table('inventories as i')
             ->join('products as p', 'i.product_uid', '=', 'p.uid')
             ->where('p.is_active', true)
-            ->whereRaw('i.quantity_in_stock <= p.minimum_stock')
-            ->select('p.product_name', 'i.quantity_in_stock', 'p.minimum_stock')
+            ->whereRaw('i.quantity_in_stock <= p.reorder_level')
+            ->select('p.product_name', 'i.quantity_in_stock', 'p.reorder_level as minimum_stock')
             ->orderBy('i.quantity_in_stock')
             ->limit(10)
             ->get();
@@ -69,7 +69,7 @@ class DashboardController extends Controller
         $lowInventoryRemaining = DB::table('inventories as i')
             ->join('products as p', 'i.product_uid', '=', 'p.uid')
             ->where('p.is_active', true)
-            ->select('p.product_name', 'i.quantity_in_stock', 'p.minimum_stock')
+            ->select('p.product_name', 'i.quantity_in_stock', 'p.reorder_level as minimum_stock')
             ->orderBy('i.quantity_in_stock')
             ->limit(15)
             ->get();

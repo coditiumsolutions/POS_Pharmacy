@@ -35,7 +35,8 @@ use Illuminate\Support\Facades\Route;
 
 // Authentication Routes
 Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
-Route::post('login', [LoginController::class, 'login']);
+Route::get('signin', [LoginController::class, 'showLoginForm'])->name('signin');
+Route::post('login', [LoginController::class, 'login'])->name('login.post');
 Route::match(['get', 'post'], 'logout', [LoginController::class, 'logout'])->name('logout');
 
 // Protected Routes

@@ -114,9 +114,9 @@
                                 <tbody>
                                     @foreach($invoices as $invoice)
                                         <tr class="table-light">
-                                            <td>{{ optional($invoice->purchase_date)->format('d-M-Y') }}</td>
-                                            <td>{{ $invoice->vendor_invoice_no ?: '—' }}</td>
-                                            <td>{{ $invoice->purchase_invoice_no }}</td>
+                                            <td>{{ optional($invoice->invoice_date)->format('d-M-Y') }}</td>
+                                            <td>{{ $invoice->supplier_invoice_no ?: '—' }}</td>
+                                            <td>{{ $invoice->invoice_no }}</td>
                                             <td class="text-end">{{ number_format((float) $invoice->net_amount, 2) }}</td>
                                             <td class="text-end">{{ number_format((float) $invoice->paid_amount, 2) }}</td>
                                             <td class="text-end">{{ number_format((float) $invoice->balance_amount, 2) }}</td>
@@ -152,8 +152,8 @@
                                             data-payable="{{ $payable ? '1' : '0' }}"
                                             data-due="{{ number_format($due, 2, '.', '') }}"
                                             data-invoice="{{ $invoice->uid }}"
-                                            data-bill="{{ $invoice->vendor_invoice_no }}"
-                                            data-purchase="{{ $invoice->purchase_invoice_no }}">
+                                            data-bill="{{ $invoice->supplier_invoice_no }}"
+                                            data-purchase="{{ $invoice->invoice_no }}">
                                             <td>
                                                 @if($payable)
                                                     <input type="radio"
@@ -161,19 +161,19 @@
                                                            name="selected_invoice_uid"
                                                            value="{{ $invoice->uid }}"
                                                            data-due="{{ number_format($due, 2, '.', '') }}"
-                                                           data-bill="{{ $invoice->vendor_invoice_no }}"
-                                                           data-purchase="{{ $invoice->purchase_invoice_no }}"
+                                                           data-bill="{{ $invoice->supplier_invoice_no }}"
+                                                           data-purchase="{{ $invoice->invoice_no }}"
                                                            @checked($isSelected)
                                                            required>
                                                 @else
                                                     <span class="text-muted">—</span>
                                                 @endif
                                             </td>
-                                            <td>{{ optional($invoice->purchase_date)->format('d-M-Y') }}</td>
-                                            <td class="fw-semibold">{{ $invoice->vendor_invoice_no ?: '—' }}</td>
+                                            <td>{{ optional($invoice->invoice_date)->format('d-M-Y') }}</td>
+                                            <td class="fw-semibold">{{ $invoice->supplier_invoice_no ?: '—' }}</td>
                                             <td>
                                                 <a href="{{ route('purchase-invoices.show', $invoice->uid) }}">
-                                                    {{ $invoice->purchase_invoice_no }}
+                                                    {{ $invoice->invoice_no }}
                                                 </a>
                                             </td>
                                             <td class="text-end">{{ number_format((float) $invoice->net_amount, 2) }}</td>

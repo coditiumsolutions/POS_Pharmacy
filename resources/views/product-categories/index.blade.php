@@ -7,7 +7,7 @@
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <div>
             <h1 class="h3 page-heading mb-1">All Categories</h1>
-            <p class="text-muted mb-0">Product categories</p>
+            <p class="text-muted mb-0">Pharmacy product categories</p>
         </div>
         <div class="d-flex gap-2 flex-wrap">
             <a href="{{ route('product-categories.create') }}" class="btn btn-outline-primary">
@@ -38,8 +38,7 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead>
                         <tr>
-                            <th>Image</th>
-                            <th>Code</th>
+                            <th style="width:56px">Image</th>
                             <th>Name</th>
                             <th>Description</th>
                             <th>Status</th>
@@ -50,15 +49,13 @@
                         @forelse($categories as $category)
                         <tr>
                             <td>
-                                @if(!empty($category->image_path))
-                                    <img src="{{ asset($category->image_path) }}"
-                                         alt="{{ $category->category_name }}"
-                                         style="width: 40px; height: 40px; object-fit: cover; border: 1px solid #e2e8f0;">
+                                @if($category->image_path)
+                                    <img src="{{ asset($category->image_path) }}" alt=""
+                                         style="width:40px;height:40px;object-fit:cover;border-radius:6px;border:1px solid #e2e8f0;">
                                 @else
                                     <span class="text-muted">—</span>
                                 @endif
                             </td>
-                            <td>{{ $category->category_code }}</td>
                             <td>{{ $category->category_name }}</td>
                             <td>{{ $category->description ?: '—' }}</td>
                             <td>
@@ -71,7 +68,7 @@
                             <td class="text-nowrap">
                                 <a href="{{ route('product-categories.edit', $category->uid) }}" class="btn btn-sm btn-outline-primary">Edit</a>
                                 <form method="POST" action="{{ route('product-categories.destroy', $category->uid) }}" class="d-inline"
-                                      onsubmit="return confirm('Permanently delete this category? This cannot be undone.');">
+                                      onsubmit="return confirm('Permanently delete this category?');">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
@@ -80,7 +77,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="6" class="text-center py-4 text-muted">No categories found</td>
+                            <td colspan="5" class="text-center py-4 text-muted">No categories found</td>
                         </tr>
                         @endforelse
                     </tbody>
@@ -88,7 +85,7 @@
             </div>
 
             <div class="mt-3 products-pagination">
-                {{ $categories->withQueryString()->links() }}
+                {{ $categories->links() }}
             </div>
         </div>
     </div>

@@ -59,8 +59,6 @@
         }
         th { background: #f8fafc; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.03em; }
         .text-end { text-align: right; }
-        .col-branch { width: 28%; }
-        .col-qty { width: 18%; }
         @@page { size: A4 portrait; margin: 10mm; }
         @@media print {
             body { background: #fff; }
@@ -79,7 +77,7 @@
         <div class="header">
             <div>
                 <h1>Inventory Balance</h1>
-                <div class="sub">Product · Branch · Current Quantity</div>
+                <div class="sub">Item · Batch · Expiry · Quantity · Sale Price</div>
             </div>
             <div class="meta">
                 Printed: {{ now()->format('d-M-Y H:i') }}<br>
@@ -91,9 +89,11 @@
             <thead>
                 <tr>
                     <th style="width:28px">#</th>
-                    <th>Product</th>
-                    <th class="col-branch">Branch</th>
-                    <th class="text-end col-qty">Current Qty</th>
+                    <th>Item Name</th>
+                    <th>Batch</th>
+                    <th>Expiry</th>
+                    <th class="text-end">Qty</th>
+                    <th class="text-end">Sale Price</th>
                 </tr>
             </thead>
             <tbody>
@@ -101,11 +101,13 @@
                     <tr>
                         <td>{{ $i + 1 }}</td>
                         <td>{{ $inv->product->product_name ?? ('#'.$inv->product_uid) }}</td>
-                        <td>{{ $inv->branch_name }}</td>
+                        <td>{{ $inv->batch_no ?: '—' }}</td>
+                        <td>{{ optional($inv->expiry_date)->format('d-M-Y') ?? '—' }}</td>
                         <td class="text-end">{{ number_format((float) $inv->quantity_in_stock, 3) }}</td>
+                        <td class="text-end">{{ $inv->sale_price !== null ? number_format((float) $inv->sale_price, 2) : '—' }}</td>
                     </tr>
                 @empty
-                    <tr><td colspan="4">No inventory records.</td></tr>
+                    <tr><td colspan="6">No inventory records.</td></tr>
                 @endforelse
             </tbody>
         </table>

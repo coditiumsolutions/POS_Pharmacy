@@ -22,7 +22,7 @@ class VendorsController extends Controller
             ->selectSub(function ($q) {
                 $q->from('purchase_invoices')
                     ->selectRaw('COALESCE(SUM(balance_amount), 0)')
-                    ->whereColumn('purchase_invoices.vendor_uid', 'vendors.uid')
+                    ->whereColumn('purchase_invoices.supplier_name', 'vendors.vendor_name')
                     ->where(function ($w) {
                         $w->whereNull('invoice_status')
                             ->orWhere('invoice_status', '!=', 'Cancelled');
@@ -32,7 +32,7 @@ class VendorsController extends Controller
             ->selectSub(function ($q) {
                 $q->from('purchase_invoices')
                     ->selectRaw('COUNT(*)')
-                    ->whereColumn('purchase_invoices.vendor_uid', 'vendors.uid')
+                    ->whereColumn('purchase_invoices.supplier_name', 'vendors.vendor_name')
                     ->where(function ($w) {
                         $w->whereNull('invoice_status')
                             ->orWhere('invoice_status', '!=', 'Cancelled');
@@ -120,7 +120,7 @@ class VendorsController extends Controller
     {
         $vendor = Vendor::findOrFail($uid);
 
-        $invoiceBase = PurchaseInvoice::where('vendor_uid', $vendor->uid)
+        $invoiceBase = PurchaseInvoice::where('supplier_name', $vendor->vendor_name)
             ->where(function ($w) {
                 $w->whereNull('invoice_status')
                     ->orWhere('invoice_status', '!=', 'Cancelled');
@@ -132,16 +132,15 @@ class VendorsController extends Controller
 
         $pendingInvoices = (clone $invoiceBase)
             ->where('balance_amount', '>', 0)
-            ->orderBy('purchase_date')
+            ->orderBy('invoice_date')
             ->orderBy('uid')
             ->get();
 
-        $invoices = PurchaseInvoice::where('vendor_uid', $vendor->uid)
-            ->orderByDesc('purchase_date')
+        $invoices = PurchaseInvoice::where('supplier_name', $vendor->vendor_name)
+            ->orderByDesc('invoice_date')
             ->orderByDesc('uid')
             ->paginate(25, ['*'], 'invoices_page')
             ->withQueryString();
-
         $payments = VendorPayment::with(['branch', 'user'])
             ->where('vendor_uid', $vendor->uid)
             ->orderByDesc('payment_date')

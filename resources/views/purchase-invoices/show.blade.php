@@ -18,7 +18,7 @@
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <div>
             <h1 class="h3 page-heading mb-1">Purchase Invoice</h1>
-            <p class="text-muted mb-0">{{ $invoice->purchase_invoice_no }}</p>
+            <p class="text-muted mb-0">{{ $invoice->invoice_no }}</p>
         </div>
         <div class="d-flex gap-2">
             <a href="{{ route('purchase-invoices.edit', $invoice->uid) }}" class="btn btn-primary">Edit</a>
@@ -33,22 +33,46 @@
         <div class="invoice-meta-grid invoice-meta-form invoice-meta-readonly">
             <div class="invoice-meta-row">
                 <div class="invoice-meta-title">Invoice No</div>
-                <div class="invoice-meta-field">{{ $invoice->purchase_invoice_no }}</div>
-                <div class="invoice-meta-title">Date</div>
-                <div class="invoice-meta-field">{{ optional($invoice->purchase_date)->format('d-M-Y') }}</div>
+                <div class="invoice-meta-field">{{ $invoice->invoice_no }}</div>
+                <div class="invoice-meta-title">Invoice Date</div>
+                <div class="invoice-meta-field">{{ optional($invoice->invoice_date)->format('d-M-Y') }}</div>
             </div>
             <div class="invoice-meta-row">
-                <div class="invoice-meta-title">Vendor</div>
-                <div class="invoice-meta-field">{{ optional($invoice->vendor)->vendor_name ?: '—' }}</div>
-                <div class="invoice-meta-title">Warehouse</div>
-                <div class="invoice-meta-field">{{ optional($invoice->warehouse)->warehouse_name ?: '—' }}</div>
+                <div class="invoice-meta-title">Supplier</div>
+                <div class="invoice-meta-field">{{ $invoice->supplier_name ?: '—' }}</div>
+                <div class="invoice-meta-title">Supplier Invoice</div>
+                <div class="invoice-meta-field">{{ $invoice->supplier_invoice_no ?: '—' }}</div>
+            </div>
+            <div class="invoice-meta-row">
+                <div class="invoice-meta-title">Received Date</div>
+                <div class="invoice-meta-field">{{ optional($invoice->received_date)->format('d-M-Y') ?? '—' }}</div>
+                <div class="invoice-meta-title">Invoice Status</div>
+                <div class="invoice-meta-field">{{ $invoice->invoice_status }}</div>
+            </div>
+            <div class="invoice-meta-row">
+                <div class="invoice-meta-title">Subtotal</div>
+                <div class="invoice-meta-field">{{ number_format((float) $invoice->subtotal, 2) }}</div>
+                <div class="invoice-meta-title">Discount</div>
+                <div class="invoice-meta-field">{{ number_format((float) $invoice->discount_amount, 2) }}</div>
+            </div>
+            <div class="invoice-meta-row">
+                <div class="invoice-meta-title">Tax</div>
+                <div class="invoice-meta-field">{{ number_format((float) $invoice->tax_amount, 2) }}</div>
+                <div class="invoice-meta-title">Other Charges</div>
+                <div class="invoice-meta-field">{{ number_format((float) $invoice->other_charges, 2) }}</div>
             </div>
             <div class="invoice-meta-row">
                 <div class="invoice-meta-title">Net Amount</div>
                 <div class="invoice-meta-field">{{ number_format((float) $invoice->net_amount, 2) }}</div>
                 <div class="invoice-meta-title">Payment Status</div>
-                <div class="invoice-meta-field">{{ $invoice->payment_status }}</div>
+                <div class="invoice-meta-field">{{ $invoice->payment_status }} (Paid {{ number_format((float) $invoice->paid_amount, 2) }} / Bal {{ number_format((float) $invoice->balance_amount, 2) }})</div>
             </div>
+            @if($invoice->remarks)
+            <div class="invoice-meta-row">
+                <div class="invoice-meta-title">Remarks</div>
+                <div class="invoice-meta-field" style="grid-column: 2 / -1;">{{ $invoice->remarks }}</div>
+            </div>
+            @endif
         </div>
     </div>
 
@@ -60,19 +84,30 @@
                         <tr>
                             <th>#</th>
                             <th>Product</th>
+                            <th>Batch</th>
+                            <th>Expiry</th>
                             <th class="text-end">Qty</th>
-                            <th class="text-end">Unit Cost</th>
+                            <th class="text-end">Bonus</th>
+                            <th class="text-end">Loose</th>
+                            <th class="text-end">Base Qty</th>
+                            <th class="text-end">Price</th>
                             <th class="text-end">Line Total</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($invoice->details as $i => $line)
+                        @php $inv = $line->inventory; @endphp
                         <tr>
                             <td>{{ $i + 1 }}</td>
-                            <td>{{ optional($line->product)->product_name ?: ('#'.$line->product_uid) }}</td>
-                            <td class="text-end">{{ number_format((float) $line->quantity, 3) }}</td>
-                            <td class="text-end">{{ number_format((float) $line->unit_price, 2) }}</td>
-                            <td class="text-end">{{ number_format((float) $line->total_amount, 2) }}</td>
+                            <td>{{ optional(optional($inv)->product)->product_name ?: ('Inv #'.($line->inventory_uid)) }}</td>
+                            <td>{{ optional($inv)->batch_no ?: '—' }}</td>
+                            <td>{{ optional(optional($inv)->expiry_date)->format('d-M-Y') ?? '—' }}</td>
+                            <td class="text-end">{{ number_format((float) $line->purchase_quantity, 3) }}</td>
+                            <td class="text-end">{{ number_format((float) $line->bonus_quantity, 3) }}</td>
+                            <td class="text-end">{{ number_format((float) $line->loose_quantity, 3) }}</td>
+                            <td class="text-end">{{ number_format((float) $line->received_base_quantity, 3) }}</td>
+                            <td class="text-end">{{ number_format((float) $line->purchase_price, 2) }}</td>
+                            <td class="text-end">{{ number_format((float) $line->line_total, 2) }}</td>
                         </tr>
                         @endforeach
                     </tbody>

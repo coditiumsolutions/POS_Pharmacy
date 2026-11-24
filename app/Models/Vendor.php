@@ -43,7 +43,8 @@ class Vendor extends Model
 
     public function purchaseInvoices()
     {
-        return $this->hasMany(PurchaseInvoice::class, 'vendor_uid', 'uid');
+        // Purchases store supplier_name (text); match by vendor display name.
+        return $this->hasMany(PurchaseInvoice::class, 'supplier_name', 'vendor_name');
     }
 
     public function payments()

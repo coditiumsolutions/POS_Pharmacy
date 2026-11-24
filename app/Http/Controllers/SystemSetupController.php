@@ -31,17 +31,24 @@ class SystemSetupController extends Controller
             'print_slip_phone' => SystemSettings::printSlipPhone(),
             'print_slip_image' => SystemSettings::printSlipImage(),
             'print_slip_image_url' => SystemSettings::printSlipImageUrl(),
+            'color_combination' => SystemSettings::activeColorCombination()['id'],
+            'navbar_primary_color' => SystemSettings::navbarPrimaryColor(),
+            'navbar_secondary_color' => SystemSettings::navbarSecondaryColor(),
         ];
+        $colorCombinations = SystemSettings::colorCombinations();
 
-        return view('setup.system', compact('settings'));
+        return view('setup.system', compact('settings', 'colorCombinations'));
     }
 
     public function update(Request $request)
     {
+        $allowedComboIds = collect(SystemSettings::colorCombinations())->pluck('id')->all();
+
         $validated = $request->validate([
             'top_navbar_title' => 'required|string|max:100',
             'print_slip_heading' => 'required|string|max:150',
             'print_slip_phone' => 'nullable|string|max:50',
+            'color_combination' => 'required|string|in:' . implode(',', $allowedComboIds),
             'print_slip_image' => 'nullable|image|mimes:jpg,jpeg,png,gif,webp|max:2048',
             'remove_print_slip_image' => 'nullable|boolean',
         ]);
@@ -49,6 +56,10 @@ class SystemSetupController extends Controller
         SystemSettings::set(SystemSettings::TOP_NAVBAR_TITLE, $validated['top_navbar_title']);
         SystemSettings::set(SystemSettings::PRINT_SLIP_HEADING, $validated['print_slip_heading']);
         SystemSettings::set(SystemSettings::PRINT_SLIP_PHONE, $validated['print_slip_phone'] ?? '');
+
+        $combo = SystemSettings::resolveColorCombination($validated['color_combination']);
+        SystemSettings::set(SystemSettings::NAVBAR_PRIMARY_COLOR, $combo['primary']);
+        SystemSettings::set(SystemSettings::NAVBAR_SECONDARY_COLOR, $combo['secondary']);
 
         $currentImage = SystemSettings::printSlipImage();
 
